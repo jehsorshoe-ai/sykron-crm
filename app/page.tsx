@@ -12,7 +12,6 @@ import {
   Clock3,
   ContactRound,
   LayoutDashboard,
-  ListChecks,
   ListTodo,
   Menu,
   MoreHorizontal,
@@ -78,6 +77,19 @@ type Solution = {
   leads: number;
 };
 
+type Prospect = {
+  company: string;
+  segment: string;
+  size: string;
+  source: string;
+  pain: string;
+  status: string;
+  temperature: string;
+  channel: string;
+  nextAction: string;
+  message: string;
+};
+
 const stages = ["Novos leads", "Diagnostico", "Proposta", "Negociacao"];
 
 const initialDeals: Deal[] = [
@@ -119,10 +131,62 @@ const solutions: Solution[] = [
   { name: "Integracoes entre sistemas", category: "Tecnologia", description: "Conexao entre ferramentas para reduzir retrabalho e inconsistencias.", price: "Projeto fechado", leads: 3 },
 ];
 
+const prospects: Prospect[] = [
+  {
+    company: "Delta Odonto",
+    segment: "Clinica odontologica",
+    size: "22 colaboradores",
+    source: "Google Maps",
+    pain: "Agenda, financeiro e atendimento controlados em planilhas separadas.",
+    status: "1o contato",
+    temperature: "Alta",
+    channel: "WhatsApp",
+    nextAction: "Enviar convite para diagnostico gratuito",
+    message: "Notei que clinicas com varias agendas costumam perder visibilidade de indicadores e tempo com controles manuais. A Sykron pode mapear esses gargalos e mostrar onde processo, sistema ou dashboard trariam ganho rapido.",
+  },
+  {
+    company: "Prime Contabilidade",
+    segment: "Contabilidade",
+    size: "38 colaboradores",
+    source: "LinkedIn",
+    pain: "Muitas demandas recorrentes, pouco indicador de produtividade por carteira.",
+    status: "Follow-up 1",
+    temperature: "Media",
+    channel: "E-mail",
+    nextAction: "Enviar caso de uso sobre BI financeiro",
+    message: "Empresas contabeis crescem rapido, mas a gestao da carteira costuma ficar invisivel. Podemos fazer um diagnostico curto para identificar rotinas repetitivas, gargalos e indicadores de alta gestao.",
+  },
+  {
+    company: "ArqNova Engenharia",
+    segment: "Engenharia",
+    size: "16 colaboradores",
+    source: "Indicacao",
+    pain: "Propostas, obras e financeiro sem acompanhamento integrado.",
+    status: "Pesquisa",
+    temperature: "Alta",
+    channel: "Ligacao",
+    nextAction: "Validar decisor e agendar conversa",
+    message: "Pelo perfil da operacao, pode existir oportunidade de organizar fluxo de propostas, execucao e financeiro em uma visao unica. A Sykron trabalha justamente nessa ponte entre processo, sistema e indicador.",
+  },
+  {
+    company: "ViaSul Transportes",
+    segment: "Logistica",
+    size: "64 colaboradores",
+    source: "Lista segmentada",
+    pain: "Controles operacionais manuais e retrabalho entre areas.",
+    status: "Nutrir",
+    temperature: "Baixa",
+    channel: "E-mail",
+    nextAction: "Enviar material sobre automacao de rotinas",
+    message: "Operacoes logisticas costumam acumular controles paralelos. Um diagnostico operacional ajuda a encontrar onde automatizar, integrar dados e reduzir retrabalho antes de investir em qualquer sistema.",
+  },
+];
+
 const brl = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(n);
 
 const nav = [
   ["Visao geral", LayoutDashboard],
+  ["Prospeccao", Users],
   ["Funil de vendas", Target],
   ["Contatos", ContactRound],
   ["Empresas", BriefcaseBusiness],
@@ -157,6 +221,11 @@ export default function Home() {
   const filteredSolutions = useMemo(() => {
     const term = query.toLowerCase();
     return solutions.filter((solution) => `${solution.name} ${solution.category} ${solution.description}`.toLowerCase().includes(term));
+  }, [query]);
+
+  const filteredProspects = useMemo(() => {
+    const term = query.toLowerCase();
+    return prospects.filter((prospect) => `${prospect.company} ${prospect.segment} ${prospect.pain} ${prospect.status}`.toLowerCase().includes(term));
   }, [query]);
 
   const total = deals.reduce((sum, deal) => sum + deal.value, 0);
@@ -236,7 +305,7 @@ export default function Home() {
         <div className="content">
           <section className="welcome">
             <div>
-              <p className="eyebrow">SYKRON · INTELIGENCIA EMPRESARIAL</p>
+              <p className="eyebrow">SYKRON - INTELIGENCIA EMPRESARIAL</p>
               <h1>{active}</h1>
               <p>{moduleSubtitle(active)}</p>
             </div>
@@ -244,7 +313,11 @@ export default function Home() {
           </section>
 
           {active === "Visao geral" && (
-            <Overview deals={filteredDeals} total={total} openTasks={openTasks} setActive={setActive} setModal={setModal} />
+            <Overview deals={filteredDeals} total={total} setActive={setActive} setModal={setModal} />
+          )}
+
+          {active === "Prospeccao" && (
+            <ProspectionModule prospects={filteredProspects} />
           )}
 
           {active === "Funil de vendas" && (
@@ -294,17 +367,18 @@ export default function Home() {
   );
 }
 
-function Overview({ deals, total, openTasks, setActive, setModal }: { deals: Deal[]; total: number; openTasks: number; setActive: (view: string) => void; setModal: (open: boolean) => void }) {
+function Overview({ deals, total, setActive, setModal }: { deals: Deal[]; total: number; setActive: (view: string) => void; setModal: (open: boolean) => void }) {
   return (
     <>
       <section className="metrics">
         <Metric icon={CircleDollarSign} label="Pipeline total" value={brl(total)} note="12,5% este mes" up color="cyan" />
         <Metric icon={Target} label="Oportunidades" value={String(deals.length)} note="Base demonstrativa" color="blue" />
-        <Metric icon={ListChecks} label="Tarefas abertas" value={String(openTasks)} note="Prioridades comerciais" color="green" />
+        <Metric icon={Users} label="Leads em prospeccao" value={String(prospects.length)} note="Lista qualificada" color="green" />
         <Metric icon={TrendingUp} label="Taxa de conversao" value="31,8%" note="Meta: 40%" up color="orange" />
       </section>
 
       <section className="module-grid">
+        <button className="module-card" onClick={() => setActive("Prospeccao")}><Users size={21} /><b>Prospeccao</b><span>Leads, dores e cadencias consultivas</span><strong>{prospects.length} leads</strong></button>
         <button className="module-card" onClick={() => setActive("Funil de vendas")}><Target size={21} /><b>Funil de vendas</b><span>Kanban por etapa comercial</span><strong>{brl(total)}</strong></button>
         <button className="module-card" onClick={() => setActive("Contatos")}><ContactRound size={21} /><b>Contatos</b><span>Decisores e proximas conversas</span><strong>{contacts.length} contatos</strong></button>
         <button className="module-card" onClick={() => setActive("Empresas")}><BriefcaseBusiness size={21} /><b>Empresas</b><span>Clientes potenciais e dores</span><strong>{companies.length} contas</strong></button>
@@ -325,6 +399,54 @@ function Overview({ deals, total, openTasks, setActive, setModal }: { deals: Dea
         </div>
       </section>
     </>
+  );
+}
+
+function ProspectionModule({ prospects }: { prospects: Prospect[] }) {
+  const hotLeads = prospects.filter((prospect) => prospect.temperature === "Alta").length;
+
+  return (
+    <section className="prospection-stack">
+      <div className="metrics prospect-metrics">
+        <Metric icon={Users} label="Leads mapeados" value={String(prospects.length)} note="Base consultiva" color="cyan" />
+        <Metric icon={TrendingUp} label="Temperatura alta" value={String(hotLeads)} note="Prioridade de contato" up color="green" />
+        <Metric icon={Clock3} label="Follow-ups" value="2" note="Proximas 48 horas" color="orange" />
+        <Metric icon={Target} label="Meta da semana" value="8" note="Diagnosticos agendados" color="blue" />
+      </div>
+
+      <section className="prospection-layout">
+        <div className="panel data-panel">
+          <div className="panel-head"><div><h2>Leads priorizados</h2><p>Empresas com dor provavel antes de virar oportunidade</p></div><button>Novo lead <ChevronRight size={16} /></button></div>
+          <div className="prospect-list">
+            {prospects.map((prospect) => (
+              <article className="prospect-card" key={prospect.company}>
+                <div className="prospect-main">
+                  <div className="row-avatar">{prospect.company.slice(0, 2).toUpperCase()}</div>
+                  <div><h3>{prospect.company}</h3><span>{prospect.segment} - {prospect.size}</span></div>
+                </div>
+                <div className="prospect-tags"><em>{prospect.temperature}</em><strong>{prospect.status}</strong><span>{prospect.channel}</span></div>
+                <div className="pain-box"><small>Dor provavel</small><b>{prospect.pain}</b></div>
+                <footer><span>{prospect.source}</span><strong>{prospect.nextAction}</strong></footer>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="panel cadence-panel">
+          <div className="panel-head"><div><h2>Cadencia Sykron</h2><p>Contato consultivo, sem parecer disparo em massa</p></div><div className="zap-icon"><Zap size={18} /></div></div>
+          <div className="cadence-steps">
+            <div className="cadence-step"><span>1</span><div><b>Pesquisa rapida</b><small>Segmento, decisor e dor provavel</small></div></div>
+            <div className="cadence-step"><span>2</span><div><b>Primeiro contato</b><small>Mensagem personalizada com diagnostico</small></div></div>
+            <div className="cadence-step"><span>3</span><div><b>Follow-up</b><small>Prova de valor e convite de 30 minutos</small></div></div>
+            <div className="cadence-step"><span>4</span><div><b>Converter</b><small>Criar oportunidade no funil</small></div></div>
+          </div>
+          <div className="message-box">
+            <small>Mensagem sugerida</small>
+            <p>{prospects[0]?.message ?? "Selecione um lead para gerar uma abordagem consultiva."}</p>
+          </div>
+        </aside>
+      </section>
+    </section>
   );
 }
 
@@ -377,7 +499,7 @@ function ContactsModule({ contacts }: { contacts: Contact[] }) {
         {contacts.map((contact) => (
           <article className="row-card" key={contact.email}>
             <div className="row-avatar">{contact.name.slice(0, 2).toUpperCase()}</div>
-            <div className="row-main"><b>{contact.name}</b><span>{contact.role} · {contact.company}</span></div>
+            <div className="row-main"><b>{contact.name}</b><span>{contact.role} - {contact.company}</span></div>
             <div><small>Status</small><strong>{contact.status}</strong></div>
             <div><small>Proxima acao</small><strong>{contact.next}</strong></div>
             <div className="row-actions"><span>{contact.phone}</span><span>{contact.email}</span></div>
@@ -397,7 +519,7 @@ function CompaniesModule({ companies }: { companies: Company[] }) {
           <article className="company-card" key={company.name}>
             <div className="company-card-head"><div className="row-avatar">{company.name.slice(0, 2).toUpperCase()}</div><span>{company.fit}</span></div>
             <h3>{company.name}</h3>
-            <p>{company.segment} · {company.size}</p>
+            <p>{company.segment} - {company.size}</p>
             <div className="pain-box"><small>Dor principal</small><b>{company.pain}</b></div>
             <footer><span>{company.owner}</span><strong>{brl(company.value)}</strong></footer>
           </article>
@@ -415,7 +537,7 @@ function TasksModule({ tasks }: { tasks: Task[] }) {
         {tasks.map((task) => (
           <article className={task.done ? "task-card done" : "task-card"} key={`${task.company}-${task.title}`}>
             <div className="check-dot">{task.done ? "✓" : ""}</div>
-            <div><b>{task.title}</b><span>{task.company} · {task.type}</span></div>
+            <div><b>{task.title}</b><span>{task.company} - {task.type}</span></div>
             <time>{task.time}</time>
             <em>{task.priority}</em>
           </article>
@@ -449,12 +571,13 @@ function Metric({ icon: Icon, label, value, note, up, color }: { icon: React.Ele
 }
 
 function Activity({ time, title, company, type }: Task) {
-  return <div className="activity"><div className="activity-icon"><CalendarDays size={18} /></div><div className="activity-copy"><b>{title}</b><span>{company} · {type}</span></div><time>{time}</time><ChevronRight size={16} /></div>;
+  return <div className="activity"><div className="activity-icon"><CalendarDays size={18} /></div><div className="activity-copy"><b>{title}</b><span>{company} - {type}</span></div><time>{time}</time><ChevronRight size={16} /></div>;
 }
 
 function moduleSubtitle(active: string) {
   const subtitles: Record<string, string> = {
     "Visao geral": "Sincronizando processos. Potencializando resultados.",
+    "Prospeccao": "Organize leads, dores provaveis e abordagens consultivas antes do disparo.",
     "Funil de vendas": "Controle as oportunidades por etapa, valor e proxima acao.",
     "Contatos": "Organize decisores, influenciadores e proximos passos comerciais.",
     "Empresas": "Entenda dores, potencial e encaixe das contas em prospeccao.",

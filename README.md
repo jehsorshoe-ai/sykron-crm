@@ -2,7 +2,7 @@
 
 CRM comercial da Sykron, assessoria em melhoria continua e alta gestao que entrega solucoes empresariais em processos, sistemas e automacoes.
 
-A interface inclui modulos navegaveis para visao geral, funil de vendas, contatos, empresas, tarefas e solucoes. O cadastro rapido de oportunidades funciona com dados demonstrativos locais.
+A interface inclui modulos navegaveis para visao geral, prospeccao inteligente, funil de vendas, contatos, empresas, tarefas e solucoes. O cadastro rapido de oportunidades funciona com dados demonstrativos locais.
 
 Site publicado: https://jehsorshoe-ai.github.io/sykron-crm/
 
