@@ -33,6 +33,10 @@ type Deal = {
   title: string;
   value: number;
   stage: string;
+  temperature: string;
+  bucket: string;
+  nextContact: string;
+  history: string;
   person: string;
   initials: string;
   color: string;
@@ -100,14 +104,15 @@ type Draft = Record<string, string>;
 type EditorField = { name: string; label: string; type?: "text" | "number" | "select" | "textarea"; options?: string[] };
 
 const stages = ["Novos leads", "Diagnostico", "Proposta", "Negociacao"];
+const followUpBuckets = ["Hoje", "3 dias", "7 dias", "15 dias", "30 dias"];
 
 const initialDeals: Deal[] = [
-  { id: 1, company: "Clinica Aurora", title: "Dashboard executivo de atendimento", value: 8900, stage: "Novos leads", person: "Marina", initials: "CA", color: "#00b9f2", due: "Hoje", tag: "Dashboard" },
-  { id: 2, company: "Vertice Imoveis", title: "Sistema inteligente de gestao comercial", value: 12400, stage: "Diagnostico", person: "Rafael", initials: "VI", color: "#e9784d", due: "Amanha", tag: "Sistema" },
-  { id: 3, company: "Studio Uno", title: "Automacao de propostas e follow-up", value: 4800, stage: "Diagnostico", person: "Marina", initials: "SU", color: "#198f78", due: "22 jul", tag: "Automacao" },
-  { id: 4, company: "Almeida Contabil", title: "BI financeiro e indicadores estrategicos", value: 15600, stage: "Proposta", person: "Jefferson", initials: "AC", color: "#bd6db5", due: "24 jul", tag: "BI" },
-  { id: 5, company: "Move Academia", title: "Mapeamento e melhoria de processos", value: 6300, stage: "Proposta", person: "Rafael", initials: "MA", color: "#d59823", due: "25 jul", tag: "Gestao" },
-  { id: 6, company: "Norte Solar", title: "Integracao da operacao comercial", value: 18900, stage: "Negociacao", person: "Jefferson", initials: "NS", color: "#3c7dd9", due: "Hoje", tag: "Integracao" },
+  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Alta", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda" },
+  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Alta", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up" },
+  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Alta", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao" },
+  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Media", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores" },
+  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Media", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao" },
+  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Alta", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil" },
 ];
 
 const companies: Company[] = [
@@ -325,6 +330,7 @@ const whatsappHref = (phone: string) => {
   if (!digits) return "#";
   return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
 };
+const temperatureClass = (temperature: string) => temperature.toLowerCase().replace("media", "medium").replace("baixa", "low").replace("alta", "high");
 
 const nav = [
   ["Visao geral", LayoutDashboard],
@@ -358,9 +364,13 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "title", label: "Solucao identificada" },
     { name: "value", label: "Valor estimado", type: "number" },
     { name: "stage", label: "Etapa", type: "select", options: stages },
+    { name: "temperature", label: "Temperatura", type: "select", options: ["Alta", "Media", "Baixa"] },
+    { name: "bucket", label: "Bolsao de recontato", type: "select", options: followUpBuckets },
+    { name: "nextContact", label: "Proximo contato" },
     { name: "person", label: "Responsavel" },
     { name: "due", label: "Proxima acao" },
     { name: "tag", label: "Tipo de solucao" },
+    { name: "history", label: "Historico da negociacao", type: "textarea" },
   ],
   contact: [
     { name: "name", label: "Nome" },
@@ -398,7 +408,7 @@ const editorFields: Record<EntityKind, EditorField[]> = {
 
 const emptyDrafts: Record<EntityKind, Draft> = {
   prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Media", channel: "WhatsApp", nextAction: "", message: "" },
-  deal: { company: "", title: "", value: "0", stage: "Novos leads", person: "Jefferson", due: "Novo", tag: "Solucao" },
+  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Media", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "" },
   contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
   company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
   task: { time: "", title: "", company: "", type: "", priority: "Media" },
@@ -432,7 +442,7 @@ export default function Home() {
 
   const filteredDeals = useMemo(() => {
     const term = query.toLowerCase();
-    return deals.filter((deal) => `${deal.company} ${deal.title} ${deal.tag}`.toLowerCase().includes(term));
+    return deals.filter((deal) => `${deal.company} ${deal.title} ${deal.tag} ${deal.temperature} ${deal.bucket} ${deal.history}`.toLowerCase().includes(term));
   }, [deals, query]);
 
   const filteredCompanies = useMemo(() => {
@@ -470,6 +480,10 @@ export default function Home() {
         title: form.title,
         value: Number(form.value) || 0,
         stage: form.stage,
+        temperature: "Media",
+        bucket: "7 dias",
+        nextContact: "Definir proximo contato",
+        history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
         person: "Jefferson",
         initials: form.company.slice(0, 2).toUpperCase(),
         color: "#00b9f2",
@@ -495,7 +509,7 @@ export default function Home() {
   function draftFrom(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution): Draft {
     if (kind === "deal") {
       const deal = item as Deal;
-      return { company: deal.company, title: deal.title, value: String(deal.value), stage: deal.stage, person: deal.person, due: deal.due, tag: deal.tag };
+      return { company: deal.company, title: deal.title, value: String(deal.value), stage: deal.stage, temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history };
     }
 
     if (kind === "company") {
@@ -554,6 +568,10 @@ export default function Home() {
         title: draft.title || "Nova oportunidade",
         value: Number(draft.value) || 0,
         stage: draft.stage || "Novos leads",
+        temperature: draft.temperature || "Media",
+        bucket: draft.bucket || "7 dias",
+        nextContact: draft.nextContact || "Definir proximo contato",
+        history: draft.history || "Historico ainda nao registrado.",
         person: draft.person || "Jefferson",
         initials: (draft.company || "NE").slice(0, 2).toUpperCase(),
         color: "#00b9f2",
@@ -828,10 +846,25 @@ function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Pr
 }
 
 function PipelineModule({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
+  const hotDeals = deals.filter((deal) => deal.temperature === "Alta").length;
+  const activeFollowUps = deals.filter((deal) => deal.bucket === "Hoje" || deal.bucket === "3 dias").length;
+
   return (
     <section className="panel pipeline-panel">
       <div className="panel-head"><div><h2>Pipeline de vendas</h2><p>Acompanhe suas negociacoes por etapa</p></div><button onClick={() => setModal(true)}>Nova oportunidade <ChevronRight size={16} /></button></div>
-      <div className="pipeline-summary"><div><span className="live-dot" /> <b>{deals.length} oportunidades ativas</b></div><strong>{brl(deals.reduce((sum, deal) => sum + deal.value, 0))}</strong></div>
+      <div className="pipeline-summary"><div><span className="live-dot" /> <b>{deals.length} oportunidades ativas</b></div><span>{hotDeals} quentes · {activeFollowUps} para recontato curto</span><strong>{brl(deals.reduce((sum, deal) => sum + deal.value, 0))}</strong></div>
+      <div className="followup-board">
+        {followUpBuckets.map((bucket) => {
+          const bucketDeals = deals.filter((deal) => deal.bucket === bucket);
+          return (
+            <div className="followup-bucket" key={bucket}>
+              <small>Bolsao</small>
+              <b>{bucket}</b>
+              <span>{bucketDeals.length} contato{bucketDeals.length === 1 ? "" : "s"}</span>
+            </div>
+          );
+        })}
+      </div>
       <Kanban deals={deals} setForm={setForm} setModal={setModal} onOpen={onOpen} onEdit={onEdit} />
     </section>
   );
@@ -862,6 +895,12 @@ function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) =
       <div className="deal-top"><div className="company-avatar" style={{ background: deal.color }}>{deal.initials}</div><span className="tag">{deal.tag}</span><button aria-label="Mais opcoes"><MoreHorizontal size={17} /></button></div>
       <h3>{deal.title}</h3>
       <p>{deal.company}</p>
+      <div className="deal-signals">
+        <span className={`temperature-pill ${temperatureClass(deal.temperature)}`}>{deal.temperature}</span>
+        <span className="bucket-pill">Bolsao: {deal.bucket}</span>
+      </div>
+      <div className="next-contact"><Clock3 size={13} /><span>{deal.nextContact}</span></div>
+      <div className="history-preview"><small>Historico</small><span>{deal.history}</span></div>
       <strong>{brl(deal.value)}</strong>
       <div className="deal-footer"><span><Clock3 size={13} /> {deal.due}</span><span className="person">{deal.person.slice(0, 1)}</span></div>
       <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir</button><button onClick={() => onEdit(deal)}>Editar</button></div>
