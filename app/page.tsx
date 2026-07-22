@@ -104,15 +104,22 @@ type Draft = Record<string, string>;
 type EditorField = { name: string; label: string; type?: "text" | "number" | "select" | "textarea"; options?: string[] };
 
 const stages = ["Novos leads", "Diagnostico", "Proposta", "Negociacao"];
-const followUpBuckets = ["Hoje", "3 dias", "7 dias", "15 dias", "30 dias"];
+const salesTemperatures = ["Super quente", "Quente", "Morno", "Frio", "Bolsao"];
+const returnPeriodByTemperature: Record<string, string> = {
+  "Super quente": "Hoje",
+  Quente: "3 dias",
+  Morno: "7 dias",
+  Frio: "15 dias",
+  Bolsao: "30 dias",
+};
 
 const initialDeals: Deal[] = [
-  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Alta", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda" },
-  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Alta", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up" },
-  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Alta", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao" },
-  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Media", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores" },
-  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Media", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao" },
-  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Alta", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil" },
+  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda" },
+  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Quente", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up" },
+  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Morno", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao" },
+  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Frio", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores" },
+  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Bolsao", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao" },
+  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil" },
 ];
 
 const companies: Company[] = [
@@ -157,7 +164,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Agenda, retornos de avaliacao e acompanhamento de pacientes podem se perder no WhatsApp sem controle de follow-up.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Super quente",
     channel: "WhatsApp",
     nextAction: "Oferecer diagnostico gratuito de agenda e retornos",
     message: "Oi, tudo bem? Vi que voces trabalham com agendamentos e avaliacoes por WhatsApp. Eu sou da Sykron, aqui de Sorocaba, e ajudo pequenos negocios a organizar agenda, retornos e follow-ups sem complicar. Posso te mandar uma ideia simples de melhoria para reduzir esquecimentos e aumentar retorno de clientes?",
@@ -173,7 +180,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Banho, tosa, hotel, creche e taxi dog exigem agenda organizada, lembretes e retorno recorrente dos tutores.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Quente",
     channel: "WhatsApp",
     nextAction: "Oferecer planilha/mini CRM de agenda e retorno",
     message: "Oi, tudo bem? Vi que a Caninos tem banho e tosa, creche, hotel e taxi dog. Esse tipo de rotina costuma depender muito de agenda e lembrete no WhatsApp. A Sykron pode montar um controle simples para retornos, pacotes e lembretes de clientes. Posso te mostrar um modelo bem rapido?",
@@ -189,7 +196,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Pedidos por delivery, agendamentos de banho e tosa e recompra de produtos podem virar lista manual sem acompanhamento.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Quente",
     channel: "WhatsApp",
     nextAction: "Oferecer controle de delivery, agendamentos e recompra",
     message: "Oi, tudo bem? Vi que voces trabalham com pet shop, banho e tosa e delivery. A Sykron ajuda negocios locais a organizar pedidos, agendamentos e retornos de clientes em um controle simples. Posso te mandar uma sugestao bem pratica para facilitar a rotina do WhatsApp?",
@@ -205,7 +212,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Atendimento por horario, pacotes recorrentes e orcamentos personalizados podem precisar de lembretes e controle de clientes.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Quente",
     channel: "WhatsApp",
     nextAction: "Enviar ideia de agenda + lembrete automatico",
     message: "Oi, tudo bem? Vi que o agendamento da Belle Petit e feito pelo WhatsApp e que voces trabalham com atendimento premium. A Sykron pode ajudar com um controle simples de agenda, retorno e pacotes recorrentes, sem sistema complicado. Posso te mostrar uma ideia?",
@@ -221,7 +228,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Consultas com hora marcada, retorno por WhatsApp, locacao de salas e profissionais diferentes exigem organizacao de agenda e indicadores.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Morno",
     channel: "WhatsApp",
     nextAction: "Oferecer diagnostico de agenda, salas e conversao",
     message: "Oi, tudo bem? Vi que a CampoClin trabalha com varias especialidades, agenda por WhatsApp e locacao de salas. A Sykron pode ajudar a organizar agenda, retornos e indicadores simples de atendimento. Posso te mandar uma sugestao de melhoria sem compromisso?",
@@ -237,7 +244,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Consultas, banho e tosa, farmacia, exames e retornos criam varios pontos de contato que podem ser organizados em um fluxo simples.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Morno",
     channel: "WhatsApp",
     nextAction: "Propor controle de retornos, vacinas e servicos recorrentes",
     message: "Oi, tudo bem? Vi que a Vet Center tem atendimento 24h e varios servicos para pets. A Sykron pode ajudar com um controle simples de retornos, lembretes e acompanhamento de clientes pelo WhatsApp. Posso te mandar uma ideia pratica?",
@@ -253,7 +260,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Agendamentos de exames, resultados por WhatsApp/e-mail e parcerias com veterinarios podem ganhar controle de status e prazos.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Morno",
     channel: "WhatsApp",
     nextAction: "Oferecer quadro simples de status dos exames e retornos",
     message: "Oi, tudo bem? Vi que a Vetlab agenda exames e entrega resultados digitais. A Sykron pode ajudar com um controle simples de status, prazos e retornos para melhorar a visibilidade da rotina. Posso te mostrar uma sugestao rapida?",
@@ -269,7 +276,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Aulas demonstrativas, novos alunos, rematriculas e acompanhamento de interessados precisam de funil simples para nao perder contatos.",
     status: "1o contato",
-    temperature: "Alta",
+    temperature: "Super quente",
     channel: "WhatsApp",
     nextAction: "Oferecer funil simples para interessados e rematriculas",
     message: "Oi, tudo bem? Vi que voces trabalham com aulas demonstrativas e varios cursos. A Sykron pode montar um controle simples para interessados, follow-ups e rematriculas, ajudando a nao perder contatos do WhatsApp. Posso te mandar um exemplo?",
@@ -285,7 +292,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Triagem de pacientes, agenda de avaliacao, cursos e contatos comerciais podem precisar de follow-up organizado.",
     status: "Pesquisa",
-    temperature: "Media",
+    temperature: "Frio",
     channel: "WhatsApp",
     nextAction: "Validar responsavel por agenda e comercial",
     message: "Oi, tudo bem? Vi que a FACOP tem triagem, agendamento e canais comerciais por WhatsApp. A Sykron pode ajudar a organizar os contatos, retornos e indicadores de atendimento em um controle simples. Quem seria a pessoa ideal para eu apresentar essa ideia?",
@@ -301,7 +308,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Entregas, rastreio, armazenamento e solicitacoes por WhatsApp podem precisar de status, prazos e controle de clientes.",
     status: "Pesquisa",
-    temperature: "Media",
+    temperature: "Frio",
     channel: "WhatsApp",
     nextAction: "Oferecer controle de pedidos, status e follow-up B2B",
     message: "Oi, tudo bem? Vi que a RPM trabalha com entregas, rastreio e armazenagem. A Sykron pode ajudar com um controle simples de pedidos, status e retornos para clientes, sem implantar um sistema pesado. Posso te mandar uma ideia pratica?",
@@ -317,7 +324,7 @@ const prospects: Prospect[] = [
     source: "Site oficial - WhatsApp publico",
     pain: "Avaliacoes gratuitas, agendamento imediato e retorno de interessados pedem funil de atendimento para melhorar conversao.",
     status: "Nutrir",
-    temperature: "Media",
+    temperature: "Bolsao",
     channel: "WhatsApp",
     nextAction: "Enviar abordagem sobre conversao de avaliacoes",
     message: "Oi, tudo bem? Vi que voces trabalham com avaliacao gratuita e agendamento pelo WhatsApp. A Sykron pode ajudar a organizar interessados, retornos e indicadores de conversao em um controle simples. Posso te mandar uma sugestao?",
@@ -330,7 +337,7 @@ const whatsappHref = (phone: string) => {
   if (!digits) return "#";
   return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
 };
-const temperatureClass = (temperature: string) => temperature.toLowerCase().replace("media", "medium").replace("baixa", "low").replace("alta", "high");
+const temperatureClass = (temperature: string) => temperature.toLowerCase().replace("super quente", "super-hot").replace("quente", "hot").replace("morno", "warm").replace("frio", "cold").replace("bolsao", "pool");
 
 const nav = [
   ["Visao geral", LayoutDashboard],
@@ -354,7 +361,7 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "source", label: "Origem" },
     { name: "pain", label: "Dor provavel", type: "textarea" },
     { name: "status", label: "Status", type: "select", options: ["Pesquisa", "1o contato", "Follow-up 1", "Nutrir", "Qualificado"] },
-    { name: "temperature", label: "Temperatura", type: "select", options: ["Alta", "Media", "Baixa"] },
+    { name: "temperature", label: "Temperatura", type: "select", options: salesTemperatures },
     { name: "channel", label: "Canal", type: "select", options: ["WhatsApp", "E-mail", "Ligacao", "LinkedIn"] },
     { name: "nextAction", label: "Proxima acao" },
     { name: "message", label: "Mensagem sugerida", type: "textarea" },
@@ -364,8 +371,7 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "title", label: "Solucao identificada" },
     { name: "value", label: "Valor estimado", type: "number" },
     { name: "stage", label: "Etapa", type: "select", options: stages },
-    { name: "temperature", label: "Temperatura", type: "select", options: ["Alta", "Media", "Baixa"] },
-    { name: "bucket", label: "Bolsao de recontato", type: "select", options: followUpBuckets },
+    { name: "temperature", label: "Temperatura", type: "select", options: salesTemperatures },
     { name: "nextContact", label: "Proximo contato" },
     { name: "person", label: "Responsavel" },
     { name: "due", label: "Proxima acao" },
@@ -407,8 +413,8 @@ const editorFields: Record<EntityKind, EditorField[]> = {
 };
 
 const emptyDrafts: Record<EntityKind, Draft> = {
-  prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Media", channel: "WhatsApp", nextAction: "", message: "" },
-  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Media", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "" },
+  prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Morno", channel: "WhatsApp", nextAction: "", message: "" },
+  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "" },
   contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
   company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
   task: { time: "", title: "", company: "", type: "", priority: "Media" },
@@ -480,8 +486,8 @@ export default function Home() {
         title: form.title,
         value: Number(form.value) || 0,
         stage: form.stage,
-        temperature: "Media",
-        bucket: "7 dias",
+        temperature: "Morno",
+        bucket: returnPeriodByTemperature.Morno,
         nextContact: "Definir proximo contato",
         history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
         person: "Jefferson",
@@ -542,6 +548,7 @@ export default function Home() {
     const isNew = editor.key === "__new__";
 
     if (editor.kind === "prospect") {
+      const selectedTemperature = draft.temperature || "Morno";
       const next: Prospect = {
         company: draft.company || "Novo lead",
         segment: draft.segment || "Segmento nao informado",
@@ -553,7 +560,7 @@ export default function Home() {
         source: draft.source || "Manual",
         pain: draft.pain || "Dor ainda nao mapeada.",
         status: draft.status || "Pesquisa",
-        temperature: draft.temperature || "Media",
+        temperature: selectedTemperature,
         channel: draft.channel || "WhatsApp",
         nextAction: draft.nextAction || "Definir proxima acao",
         message: draft.message || "Mensagem consultiva ainda nao definida.",
@@ -562,15 +569,17 @@ export default function Home() {
     }
 
     if (editor.kind === "deal") {
+      const selectedTemperature = draft.temperature || "Morno";
+      const returnPeriod = returnPeriodByTemperature[selectedTemperature] || "7 dias";
       const next: Deal = {
         id: isNew ? Date.now() : Number(editor.key),
         company: draft.company || "Nova empresa",
         title: draft.title || "Nova oportunidade",
         value: Number(draft.value) || 0,
         stage: draft.stage || "Novos leads",
-        temperature: draft.temperature || "Media",
-        bucket: draft.bucket || "7 dias",
-        nextContact: draft.nextContact || "Definir proximo contato",
+        temperature: selectedTemperature,
+        bucket: returnPeriod,
+        nextContact: draft.nextContact || `Retornar em ${returnPeriod}`,
         history: draft.history || "Historico ainda nao registrado.",
         person: draft.person || "Jefferson",
         initials: (draft.company || "NE").slice(0, 2).toUpperCase(),
@@ -792,13 +801,13 @@ function Overview({ deals, total, prospectCount, contactCount, companyCount, sol
 }
 
 function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Prospect[]; onOpen: (prospect: Prospect) => void; onEdit: (prospect: Prospect) => void; onNew: () => void }) {
-  const hotLeads = prospects.filter((prospect) => prospect.temperature === "Alta").length;
+  const hotLeads = prospects.filter((prospect) => prospect.temperature === "Super quente" || prospect.temperature === "Quente").length;
 
   return (
     <section className="prospection-stack">
       <div className="metrics prospect-metrics">
         <Metric icon={Users} label="Leads mapeados" value={String(prospects.length)} note="Base consultiva" color="cyan" />
-        <Metric icon={TrendingUp} label="Temperatura alta" value={String(hotLeads)} note="Prioridade de contato" up color="green" />
+        <Metric icon={TrendingUp} label="Acao rapida" value={String(hotLeads)} note="Super quente ou quente" up color="green" />
         <Metric icon={Clock3} label="Follow-ups" value="2" note="Proximas 48 horas" color="orange" />
         <Metric icon={Target} label="Meta da semana" value="8" note="Diagnosticos agendados" color="blue" />
       </div>
@@ -846,21 +855,21 @@ function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Pr
 }
 
 function PipelineModule({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
-  const hotDeals = deals.filter((deal) => deal.temperature === "Alta").length;
-  const activeFollowUps = deals.filter((deal) => deal.bucket === "Hoje" || deal.bucket === "3 dias").length;
+  const hotDeals = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
+  const activeFollowUps = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
 
   return (
     <section className="panel pipeline-panel">
       <div className="panel-head"><div><h2>Pipeline de vendas</h2><p>Acompanhe suas negociacoes por etapa</p></div><button onClick={() => setModal(true)}>Nova oportunidade <ChevronRight size={16} /></button></div>
-      <div className="pipeline-summary"><div><span className="live-dot" /> <b>{deals.length} oportunidades ativas</b></div><span>{hotDeals} quentes · {activeFollowUps} para recontato curto</span><strong>{brl(deals.reduce((sum, deal) => sum + deal.value, 0))}</strong></div>
+      <div className="pipeline-summary"><div><span className="live-dot" /> <b>{deals.length} oportunidades ativas</b></div><span>{hotDeals} em quente/super quente · {activeFollowUps} para acao rapida</span><strong>{brl(deals.reduce((sum, deal) => sum + deal.value, 0))}</strong></div>
       <div className="followup-board">
-        {followUpBuckets.map((bucket) => {
-          const bucketDeals = deals.filter((deal) => deal.bucket === bucket);
+        {salesTemperatures.map((temperature) => {
+          const temperatureDeals = deals.filter((deal) => deal.temperature === temperature);
           return (
-            <div className="followup-bucket" key={bucket}>
-              <small>Bolsao</small>
-              <b>{bucket}</b>
-              <span>{bucketDeals.length} contato{bucketDeals.length === 1 ? "" : "s"}</span>
+            <div className={`followup-bucket ${temperatureClass(temperature)}`} key={temperature}>
+              <small>{returnPeriodByTemperature[temperature]}</small>
+              <b>{temperature}</b>
+              <span>{temperatureDeals.length} contato{temperatureDeals.length === 1 ? "" : "s"}</span>
             </div>
           );
         })}
@@ -897,7 +906,7 @@ function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) =
       <p>{deal.company}</p>
       <div className="deal-signals">
         <span className={`temperature-pill ${temperatureClass(deal.temperature)}`}>{deal.temperature}</span>
-        <span className="bucket-pill">Bolsao: {deal.bucket}</span>
+        <span className="bucket-pill">Retorno: {deal.bucket}</span>
       </div>
       <div className="next-contact"><Clock3 size={13} /><span>{deal.nextContact}</span></div>
       <div className="history-preview"><small>Historico</small><span>{deal.history}</span></div>
