@@ -546,6 +546,7 @@ export default function Home() {
     if (!editor) return;
 
     const isNew = editor.key === "__new__";
+    let saveMessage = `${entityLabels[editor.kind]} salvo com sucesso`;
 
     if (editor.kind === "prospect") {
       const selectedTemperature = draft.temperature || "Morno";
@@ -566,6 +567,44 @@ export default function Home() {
         message: draft.message || "Mensagem consultiva ainda nao definida.",
       };
       setProspectList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("prospect", item) === editor.key ? next : item));
+
+      if (next.status === "Qualificado") {
+        const returnPeriod = returnPeriodByTemperature[selectedTemperature] || "7 dias";
+        const qualifiedDeal: Deal = {
+          id: Date.now(),
+          company: next.company,
+          title: `Diagnostico Sykron - ${next.segment}`,
+          value: 1800,
+          stage: "Novos leads",
+          temperature: selectedTemperature,
+          bucket: returnPeriod,
+          nextContact: `${returnPeriod} - ${next.nextAction}`,
+          history: `Lead qualificado a partir da prospeccao. Dor provavel: ${next.pain} Abordagem sugerida: ${next.message}`,
+          person: "Jefferson",
+          initials: next.company.slice(0, 2).toUpperCase(),
+          color: "#00b9f2",
+          due: returnPeriod,
+          tag: "Diagnostico",
+        };
+
+        setDeals((prev) => {
+          const existing = prev.find((deal) => deal.company.toLowerCase() === next.company.toLowerCase());
+          if (!existing) return [qualifiedDeal, ...prev];
+
+          return prev.map((deal) => deal.company.toLowerCase() === next.company.toLowerCase()
+            ? {
+                ...deal,
+                temperature: selectedTemperature,
+                bucket: returnPeriod,
+                nextContact: `${returnPeriod} - ${next.nextAction}`,
+                history: `${deal.history} Atualizado pela prospeccao: lead marcado como Qualificado. Dor provavel: ${next.pain}`,
+                due: returnPeriod,
+              }
+            : deal);
+        });
+        setActive("Funil de vendas");
+        saveMessage = "Lead qualificado e enviado ao funil";
+      }
     }
 
     if (editor.kind === "deal") {
@@ -639,7 +678,7 @@ export default function Home() {
     }
 
     setEditor(null);
-    setToast(`${entityLabels[editor.kind]} salvo com sucesso`);
+    setToast(saveMessage);
     setTimeout(() => setToast(""), 2800);
   }
 
