@@ -340,7 +340,8 @@ const whatsappHref = (phone: string) => {
   return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
 };
 const temperatureClass = (temperature: string) => temperature.toLowerCase().replace("super quente", "super-hot").replace("quente", "hot").replace("morno", "warm").replace("frio", "cold").replace("bolsao", "pool");
-const latestHistoryStep = (timeline: string) => timeline.split("\n").map((line) => line.trim()).filter(Boolean).at(-1) || "Nenhum desdobramento registrado.";
+const historySteps = (timeline: string) => timeline.split("\n").map((line) => line.trim()).filter(Boolean);
+const latestHistoryStep = (timeline: string) => historySteps(timeline).at(-1) || "Nenhum desdobramento registrado.";
 
 const nav = [
   ["Visao geral", LayoutDashboard],
@@ -380,7 +381,6 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "due", label: "Proxima acao" },
     { name: "tag", label: "Tipo de solucao" },
     { name: "history", label: "Historico da negociacao", type: "textarea" },
-    { name: "historyTimeline", label: "Desdobramentos do historico", type: "textarea" },
     { name: "lessonsLearned", label: "Licoes aprendidas sobre o cliente", type: "textarea" },
   ],
   contact: [
@@ -419,7 +419,7 @@ const editorFields: Record<EntityKind, EditorField[]> = {
 
 const emptyDrafts: Record<EntityKind, Draft> = {
   prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Morno", channel: "WhatsApp", nextAction: "", message: "" },
-  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "Data - visita/conversa - o que aconteceu - objecao - proximo passo", lessonsLearned: "" },
+  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "", lessonsLearned: "" },
   contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
   company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
   task: { time: "", title: "", company: "", type: "", priority: "Media" },
@@ -495,7 +495,7 @@ export default function Home() {
         bucket: returnPeriodByTemperature.Morno,
         nextContact: "Definir proximo contato",
         history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
-        historyTimeline: "Data - visita/conversa - o que aconteceu - objecao - proximo passo",
+        historyTimeline: "22/07/2026 - Criacao manual - Oportunidade criada diretamente no funil - Objecao ainda nao mapeada - Definir proximo contato",
         lessonsLearned: "Registrar aqui o que esse cliente ensina sobre abordagem, objecoes e decisao.",
         person: "Jefferson",
         initials: form.company.slice(0, 2).toUpperCase(),
@@ -630,7 +630,7 @@ export default function Home() {
         bucket: returnPeriod,
         nextContact: draft.nextContact || `Retornar em ${returnPeriod}`,
         history: draft.history || "Historico ainda nao registrado.",
-        historyTimeline: draft.historyTimeline || "Data - visita/conversa - o que aconteceu - objecao - proximo passo",
+        historyTimeline: draft.historyTimeline || "",
         lessonsLearned: draft.lessonsLearned || "Licoes ainda nao registradas.",
         person: draft.person || "Jefferson",
         initials: (draft.company || "NE").slice(0, 2).toUpperCase(),
@@ -1053,6 +1053,27 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
   const fields = editorFields[editor.kind];
   const isEditing = editor.mode === "edit";
   const title = editor.key === "__new__" ? `Novo ${entityLabels[editor.kind]}` : `Detalhes do ${entityLabels[editor.kind]}`;
+  const isDeal = editor.kind === "deal";
+  const [historyEntry, setHistoryEntry] = useState({ date: "", type: "Visita", detail: "", objection: "", next: "" });
+  const dealHistorySteps = isDeal ? historySteps(draft.historyTimeline || "") : [];
+
+  function addHistoryStep() {
+    if (!historyEntry.date && !historyEntry.detail && !historyEntry.objection && !historyEntry.next) return;
+
+    const entry = [
+      historyEntry.date || "Data nao informada",
+      historyEntry.type || "Contato",
+      historyEntry.detail || "Sem detalhe registrado",
+      historyEntry.objection || "Objecao nao informada",
+      historyEntry.next || "Proximo passo nao definido",
+    ].join(" - ");
+
+    setDraft((current) => ({
+      ...current,
+      historyTimeline: [...historySteps(current.historyTimeline || ""), entry].join("\n"),
+    }));
+    setHistoryEntry({ date: "", type: "Visita", detail: "", objection: "", next: "" });
+  }
 
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
@@ -1080,6 +1101,32 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                 </label>
               ))}
             </div>
+            {isDeal && (
+              <section className="history-builder">
+                <div className="history-builder-head">
+                  <div><h3>Desdobramentos da negociacao</h3><p>Adicione quantas visitas, conversas, objeções, decisões e proximos passos forem necessarios.</p></div>
+                  <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
+                </div>
+
+                <div className="history-step-list">
+                  {dealHistorySteps.length ? dealHistorySteps.map((step, index) => (
+                    <article className="history-step-item" key={`${step}-${index}`}>
+                      <small>#{index + 1}</small>
+                      <p>{step}</p>
+                    </article>
+                  )) : <p className="empty-history">Nenhum desdobramento registrado ainda.</p>}
+                </div>
+
+                <div className="history-entry-grid">
+                  <label>Data<input placeholder="Ex.: 22/07/2026" value={historyEntry.date} onChange={(event) => setHistoryEntry((current) => ({ ...current, date: event.target.value }))} /></label>
+                  <label>Tipo<select value={historyEntry.type} onChange={(event) => setHistoryEntry((current) => ({ ...current, type: event.target.value }))}><option>Visita</option><option>Ligacao</option><option>WhatsApp</option><option>Reuniao</option><option>Proposta</option><option>Follow-up</option><option>Aprendizado</option></select></label>
+                  <label className="wide-field">O que aconteceu<textarea placeholder="Resumo da conversa, visita, percepcao ou decisao do cliente" value={historyEntry.detail} onChange={(event) => setHistoryEntry((current) => ({ ...current, detail: event.target.value }))} /></label>
+                  <label>Objecao / risco<input placeholder="Ex.: achou caro, precisa falar com socio..." value={historyEntry.objection} onChange={(event) => setHistoryEntry((current) => ({ ...current, objection: event.target.value }))} /></label>
+                  <label>Proximo passo<input placeholder="Ex.: retornar sexta com exemplo visual" value={historyEntry.next} onChange={(event) => setHistoryEntry((current) => ({ ...current, next: event.target.value }))} /></label>
+                </div>
+                <button type="button" className="add-history-step" onClick={addHistoryStep}>Adicionar desdobramento</button>
+              </section>
+            )}
             <div className="modal-actions"><button type="button" className="cancel" onClick={onClose}>Cancelar</button><button className="primary" type="submit">Salvar informacoes</button></div>
           </form>
         ) : (
@@ -1090,6 +1137,22 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                 <b>{draft[field.name] || "Nao informado"}</b>
               </div>
             ))}
+            {isDeal && (
+              <section className="history-builder record-history-view">
+                <div className="history-builder-head">
+                  <div><h3>Desdobramentos da negociacao</h3><p>Linha do tempo completa desse cliente.</p></div>
+                  <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
+                </div>
+                <div className="history-step-list">
+                  {dealHistorySteps.length ? dealHistorySteps.map((step, index) => (
+                    <article className="history-step-item" key={`${step}-${index}`}>
+                      <small>#{index + 1}</small>
+                      <p>{step}</p>
+                    </article>
+                  )) : <p className="empty-history">Nenhum desdobramento registrado ainda.</p>}
+                </div>
+              </section>
+            )}
             <div className="modal-actions"><button type="button" className="cancel" onClick={onClose}>Fechar</button><button className="primary" type="button" onClick={onEdit}>Editar informacoes</button></div>
           </div>
         )}
