@@ -90,6 +90,11 @@ type Prospect = {
   message: string;
 };
 
+type EntityKind = "prospect" | "deal" | "contact" | "company" | "task" | "solution";
+type EditorState = { kind: EntityKind; key: string; mode: "view" | "edit" };
+type Draft = Record<string, string>;
+type EditorField = { name: string; label: string; type?: "text" | "number" | "select" | "textarea"; options?: string[] };
+
 const stages = ["Novos leads", "Diagnostico", "Proposta", "Negociacao"];
 
 const initialDeals: Deal[] = [
@@ -194,14 +199,95 @@ const nav = [
   ["Solucoes", WandSparkles],
 ] as const;
 
+const editorFields: Record<EntityKind, EditorField[]> = {
+  prospect: [
+    { name: "company", label: "Empresa" },
+    { name: "segment", label: "Segmento" },
+    { name: "size", label: "Porte" },
+    { name: "source", label: "Origem" },
+    { name: "pain", label: "Dor provavel", type: "textarea" },
+    { name: "status", label: "Status", type: "select", options: ["Pesquisa", "1o contato", "Follow-up 1", "Nutrir", "Qualificado"] },
+    { name: "temperature", label: "Temperatura", type: "select", options: ["Alta", "Media", "Baixa"] },
+    { name: "channel", label: "Canal", type: "select", options: ["WhatsApp", "E-mail", "Ligacao", "LinkedIn"] },
+    { name: "nextAction", label: "Proxima acao" },
+    { name: "message", label: "Mensagem sugerida", type: "textarea" },
+  ],
+  deal: [
+    { name: "company", label: "Empresa" },
+    { name: "title", label: "Solucao identificada" },
+    { name: "value", label: "Valor estimado", type: "number" },
+    { name: "stage", label: "Etapa", type: "select", options: stages },
+    { name: "person", label: "Responsavel" },
+    { name: "due", label: "Proxima acao" },
+    { name: "tag", label: "Tipo de solucao" },
+  ],
+  contact: [
+    { name: "name", label: "Nome" },
+    { name: "company", label: "Empresa" },
+    { name: "role", label: "Cargo" },
+    { name: "phone", label: "Telefone" },
+    { name: "email", label: "E-mail" },
+    { name: "status", label: "Status" },
+    { name: "next", label: "Proxima acao" },
+  ],
+  company: [
+    { name: "name", label: "Empresa" },
+    { name: "segment", label: "Segmento" },
+    { name: "size", label: "Porte" },
+    { name: "pain", label: "Dor principal", type: "textarea" },
+    { name: "fit", label: "Encaixe", type: "select", options: ["Muito alto", "Alto", "Medio", "Baixo"] },
+    { name: "owner", label: "Responsavel" },
+    { name: "value", label: "Valor potencial", type: "number" },
+  ],
+  task: [
+    { name: "time", label: "Quando" },
+    { name: "title", label: "Tarefa" },
+    { name: "company", label: "Empresa" },
+    { name: "type", label: "Tipo" },
+    { name: "priority", label: "Prioridade", type: "select", options: ["Alta", "Media", "Baixa"] },
+  ],
+  solution: [
+    { name: "name", label: "Solucao" },
+    { name: "category", label: "Categoria" },
+    { name: "description", label: "Descricao", type: "textarea" },
+    { name: "price", label: "Preco" },
+    { name: "leads", label: "Leads vinculados", type: "number" },
+  ],
+};
+
+const emptyDrafts: Record<EntityKind, Draft> = {
+  prospect: { company: "", segment: "", size: "", source: "", pain: "", status: "Pesquisa", temperature: "Media", channel: "WhatsApp", nextAction: "", message: "" },
+  deal: { company: "", title: "", value: "0", stage: "Novos leads", person: "Jefferson", due: "Novo", tag: "Solucao" },
+  contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
+  company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
+  task: { time: "", title: "", company: "", type: "", priority: "Media" },
+  solution: { name: "", category: "", description: "", price: "", leads: "0" },
+};
+
+const entityLabels: Record<EntityKind, string> = {
+  prospect: "lead",
+  deal: "oportunidade",
+  contact: "contato",
+  company: "empresa",
+  task: "tarefa",
+  solution: "solucao",
+};
+
 export default function Home() {
   const [active, setActive] = useState("Visao geral");
   const [deals, setDeals] = useState(initialDeals);
+  const [prospectList, setProspectList] = useState(prospects);
+  const [companyList, setCompanyList] = useState(companies);
+  const [contactList, setContactList] = useState(contacts);
+  const [taskList, setTaskList] = useState(tasks);
+  const [solutionList, setSolutionList] = useState(solutions);
   const [query, setQuery] = useState("");
   const [modal, setModal] = useState(false);
   const [menu, setMenu] = useState(false);
   const [toast, setToast] = useState("");
   const [form, setForm] = useState({ company: "", title: "", value: "", stage: "Novos leads" });
+  const [editor, setEditor] = useState<EditorState | null>(null);
+  const [draft, setDraft] = useState<Draft>({});
 
   const filteredDeals = useMemo(() => {
     const term = query.toLowerCase();
@@ -210,26 +296,26 @@ export default function Home() {
 
   const filteredCompanies = useMemo(() => {
     const term = query.toLowerCase();
-    return companies.filter((company) => `${company.name} ${company.segment} ${company.pain}`.toLowerCase().includes(term));
-  }, [query]);
+    return companyList.filter((company) => `${company.name} ${company.segment} ${company.pain}`.toLowerCase().includes(term));
+  }, [companyList, query]);
 
   const filteredContacts = useMemo(() => {
     const term = query.toLowerCase();
-    return contacts.filter((contact) => `${contact.name} ${contact.company} ${contact.status}`.toLowerCase().includes(term));
-  }, [query]);
+    return contactList.filter((contact) => `${contact.name} ${contact.company} ${contact.status}`.toLowerCase().includes(term));
+  }, [contactList, query]);
 
   const filteredSolutions = useMemo(() => {
     const term = query.toLowerCase();
-    return solutions.filter((solution) => `${solution.name} ${solution.category} ${solution.description}`.toLowerCase().includes(term));
-  }, [query]);
+    return solutionList.filter((solution) => `${solution.name} ${solution.category} ${solution.description}`.toLowerCase().includes(term));
+  }, [solutionList, query]);
 
   const filteredProspects = useMemo(() => {
     const term = query.toLowerCase();
-    return prospects.filter((prospect) => `${prospect.company} ${prospect.segment} ${prospect.pain} ${prospect.status}`.toLowerCase().includes(term));
-  }, [query]);
+    return prospectList.filter((prospect) => `${prospect.company} ${prospect.segment} ${prospect.pain} ${prospect.status}`.toLowerCase().includes(term));
+  }, [prospectList, query]);
 
   const total = deals.reduce((sum, deal) => sum + deal.value, 0);
-  const openTasks = tasks.filter((task) => !task.done).length;
+  const openTasks = taskList.filter((task) => !task.done).length;
 
   function addDeal(e: React.FormEvent) {
     e.preventDefault();
@@ -253,6 +339,135 @@ export default function Home() {
     setForm({ company: "", title: "", value: "", stage: "Novos leads" });
     setModal(false);
     setToast("Oportunidade criada com sucesso");
+    setTimeout(() => setToast(""), 2800);
+  }
+
+  function keyFor(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution) {
+    if (kind === "deal") return String((item as Deal).id);
+    if (kind === "contact") return (item as Contact).email;
+    if (kind === "task") return `${(item as Task).company}-${(item as Task).title}`;
+    if (kind === "company") return (item as Company).name;
+    if (kind === "solution") return (item as Solution).name;
+    return (item as Prospect).company;
+  }
+
+  function draftFrom(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution): Draft {
+    if (kind === "deal") {
+      const deal = item as Deal;
+      return { company: deal.company, title: deal.title, value: String(deal.value), stage: deal.stage, person: deal.person, due: deal.due, tag: deal.tag };
+    }
+
+    if (kind === "company") {
+      const company = item as Company;
+      return { name: company.name, segment: company.segment, size: company.size, pain: company.pain, fit: company.fit, owner: company.owner, value: String(company.value) };
+    }
+
+    if (kind === "solution") {
+      const solution = item as Solution;
+      return { name: solution.name, category: solution.category, description: solution.description, price: solution.price, leads: String(solution.leads) };
+    }
+
+    return { ...(item as Draft) };
+  }
+
+  function openRecord(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution, mode: "view" | "edit" = "view") {
+    setEditor({ kind, key: keyFor(kind, item), mode });
+    setDraft(draftFrom(kind, item));
+  }
+
+  function newRecord(kind: EntityKind) {
+    setEditor({ kind, key: "__new__", mode: "edit" });
+    setDraft({ ...emptyDrafts[kind] });
+  }
+
+  function saveEditor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editor) return;
+
+    const isNew = editor.key === "__new__";
+
+    if (editor.kind === "prospect") {
+      const next: Prospect = {
+        company: draft.company || "Novo lead",
+        segment: draft.segment || "Segmento nao informado",
+        size: draft.size || "Porte nao informado",
+        source: draft.source || "Manual",
+        pain: draft.pain || "Dor ainda nao mapeada.",
+        status: draft.status || "Pesquisa",
+        temperature: draft.temperature || "Media",
+        channel: draft.channel || "WhatsApp",
+        nextAction: draft.nextAction || "Definir proxima acao",
+        message: draft.message || "Mensagem consultiva ainda nao definida.",
+      };
+      setProspectList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("prospect", item) === editor.key ? next : item));
+    }
+
+    if (editor.kind === "deal") {
+      const next: Deal = {
+        id: isNew ? Date.now() : Number(editor.key),
+        company: draft.company || "Nova empresa",
+        title: draft.title || "Nova oportunidade",
+        value: Number(draft.value) || 0,
+        stage: draft.stage || "Novos leads",
+        person: draft.person || "Jefferson",
+        initials: (draft.company || "NE").slice(0, 2).toUpperCase(),
+        color: "#00b9f2",
+        due: draft.due || "Novo",
+        tag: draft.tag || "Solucao",
+      };
+      setDeals((prev) => isNew ? [next, ...prev] : prev.map((item) => String(item.id) === editor.key ? next : item));
+    }
+
+    if (editor.kind === "contact") {
+      const next: Contact = {
+        name: draft.name || "Novo contato",
+        company: draft.company || "Empresa nao informada",
+        role: draft.role || "Cargo nao informado",
+        phone: draft.phone || "",
+        email: draft.email || `contato-${Date.now()}@sykron.local`,
+        status: draft.status || "Novo",
+        next: draft.next || "Definir proxima acao",
+      };
+      setContactList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("contact", item) === editor.key ? next : item));
+    }
+
+    if (editor.kind === "company") {
+      const next: Company = {
+        name: draft.name || "Nova empresa",
+        segment: draft.segment || "Segmento nao informado",
+        size: draft.size || "Porte nao informado",
+        pain: draft.pain || "Dor ainda nao mapeada.",
+        fit: draft.fit || "Alto",
+        owner: draft.owner || "Jefferson",
+        value: Number(draft.value) || 0,
+      };
+      setCompanyList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("company", item) === editor.key ? next : item));
+    }
+
+    if (editor.kind === "task") {
+      const next: Task = {
+        time: draft.time || "Hoje",
+        title: draft.title || "Nova tarefa",
+        company: draft.company || "Empresa nao informada",
+        type: draft.type || "Atividade",
+        priority: draft.priority || "Media",
+      };
+      setTaskList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("task", item) === editor.key ? next : item));
+    }
+
+    if (editor.kind === "solution") {
+      const next: Solution = {
+        name: draft.name || "Nova solucao",
+        category: draft.category || "Consultoria",
+        description: draft.description || "Descricao ainda nao definida.",
+        price: draft.price || "A definir",
+        leads: Number(draft.leads) || 0,
+      };
+      setSolutionList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("solution", item) === editor.key ? next : item));
+    }
+
+    setEditor(null);
+    setToast(`${entityLabels[editor.kind]} salvo com sucesso`);
     setTimeout(() => setToast(""), 2800);
   }
 
@@ -313,31 +528,31 @@ export default function Home() {
           </section>
 
           {active === "Visao geral" && (
-            <Overview deals={filteredDeals} total={total} setActive={setActive} setModal={setModal} />
+            <Overview deals={filteredDeals} total={total} prospectCount={prospectList.length} contactCount={contactList.length} companyCount={companyList.length} solutionCount={solutionList.length} setActive={setActive} setModal={setModal} />
           )}
 
           {active === "Prospeccao" && (
-            <ProspectionModule prospects={filteredProspects} />
+            <ProspectionModule prospects={filteredProspects} onOpen={(prospect) => openRecord("prospect", prospect)} onEdit={(prospect) => openRecord("prospect", prospect, "edit")} onNew={() => newRecord("prospect")} />
           )}
 
           {active === "Funil de vendas" && (
-            <PipelineModule deals={filteredDeals} setForm={setForm} setModal={setModal} />
+            <PipelineModule deals={filteredDeals} setForm={setForm} setModal={setModal} onOpen={(deal) => openRecord("deal", deal)} onEdit={(deal) => openRecord("deal", deal, "edit")} />
           )}
 
           {active === "Contatos" && (
-            <ContactsModule contacts={filteredContacts} />
+            <ContactsModule contacts={filteredContacts} onOpen={(contact) => openRecord("contact", contact)} onEdit={(contact) => openRecord("contact", contact, "edit")} onNew={() => newRecord("contact")} />
           )}
 
           {active === "Empresas" && (
-            <CompaniesModule companies={filteredCompanies} />
+            <CompaniesModule companies={filteredCompanies} onOpen={(company) => openRecord("company", company)} onEdit={(company) => openRecord("company", company, "edit")} onNew={() => newRecord("company")} />
           )}
 
           {active === "Tarefas" && (
-            <TasksModule tasks={tasks} />
+            <TasksModule tasks={taskList} onOpen={(task) => openRecord("task", task)} onEdit={(task) => openRecord("task", task, "edit")} onNew={() => newRecord("task")} />
           )}
 
           {active === "Solucoes" && (
-            <SolutionsModule solutions={filteredSolutions} />
+            <SolutionsModule solutions={filteredSolutions} onOpen={(solution) => openRecord("solution", solution)} onEdit={(solution) => openRecord("solution", solution, "edit")} onNew={() => newRecord("solution")} />
           )}
         </div>
       </main>
@@ -362,27 +577,38 @@ export default function Home() {
         </div>
       )}
 
+      {editor && (
+        <RecordEditor
+          editor={editor}
+          draft={draft}
+          setDraft={setDraft}
+          onClose={() => setEditor(null)}
+          onEdit={() => setEditor({ ...editor, mode: "edit" })}
+          onSubmit={saveEditor}
+        />
+      )}
+
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
     </div>
   );
 }
 
-function Overview({ deals, total, setActive, setModal }: { deals: Deal[]; total: number; setActive: (view: string) => void; setModal: (open: boolean) => void }) {
+function Overview({ deals, total, prospectCount, contactCount, companyCount, solutionCount, setActive, setModal }: { deals: Deal[]; total: number; prospectCount: number; contactCount: number; companyCount: number; solutionCount: number; setActive: (view: string) => void; setModal: (open: boolean) => void }) {
   return (
     <>
       <section className="metrics">
         <Metric icon={CircleDollarSign} label="Pipeline total" value={brl(total)} note="12,5% este mes" up color="cyan" />
         <Metric icon={Target} label="Oportunidades" value={String(deals.length)} note="Base demonstrativa" color="blue" />
-        <Metric icon={Users} label="Leads em prospeccao" value={String(prospects.length)} note="Lista qualificada" color="green" />
+        <Metric icon={Users} label="Leads em prospeccao" value={String(prospectCount)} note="Lista qualificada" color="green" />
         <Metric icon={TrendingUp} label="Taxa de conversao" value="31,8%" note="Meta: 40%" up color="orange" />
       </section>
 
       <section className="module-grid">
-        <button className="module-card" onClick={() => setActive("Prospeccao")}><Users size={21} /><b>Prospeccao</b><span>Leads, dores e cadencias consultivas</span><strong>{prospects.length} leads</strong></button>
+        <button className="module-card" onClick={() => setActive("Prospeccao")}><Users size={21} /><b>Prospeccao</b><span>Leads, dores e cadencias consultivas</span><strong>{prospectCount} leads</strong></button>
         <button className="module-card" onClick={() => setActive("Funil de vendas")}><Target size={21} /><b>Funil de vendas</b><span>Kanban por etapa comercial</span><strong>{brl(total)}</strong></button>
-        <button className="module-card" onClick={() => setActive("Contatos")}><ContactRound size={21} /><b>Contatos</b><span>Decisores e proximas conversas</span><strong>{contacts.length} contatos</strong></button>
-        <button className="module-card" onClick={() => setActive("Empresas")}><BriefcaseBusiness size={21} /><b>Empresas</b><span>Clientes potenciais e dores</span><strong>{companies.length} contas</strong></button>
-        <button className="module-card" onClick={() => setActive("Solucoes")}><WandSparkles size={21} /><b>Solucoes</b><span>Portfolio comercial Sykron</span><strong>{solutions.length} ofertas</strong></button>
+        <button className="module-card" onClick={() => setActive("Contatos")}><ContactRound size={21} /><b>Contatos</b><span>Decisores e proximas conversas</span><strong>{contactCount} contatos</strong></button>
+        <button className="module-card" onClick={() => setActive("Empresas")}><BriefcaseBusiness size={21} /><b>Empresas</b><span>Clientes potenciais e dores</span><strong>{companyCount} contas</strong></button>
+        <button className="module-card" onClick={() => setActive("Solucoes")}><WandSparkles size={21} /><b>Solucoes</b><span>Portfolio comercial Sykron</span><strong>{solutionCount} ofertas</strong></button>
       </section>
 
       <section className="bottom-grid">
@@ -402,7 +628,7 @@ function Overview({ deals, total, setActive, setModal }: { deals: Deal[]; total:
   );
 }
 
-function ProspectionModule({ prospects }: { prospects: Prospect[] }) {
+function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Prospect[]; onOpen: (prospect: Prospect) => void; onEdit: (prospect: Prospect) => void; onNew: () => void }) {
   const hotLeads = prospects.filter((prospect) => prospect.temperature === "Alta").length;
 
   return (
@@ -416,7 +642,7 @@ function ProspectionModule({ prospects }: { prospects: Prospect[] }) {
 
       <section className="prospection-layout">
         <div className="panel data-panel">
-          <div className="panel-head"><div><h2>Leads priorizados</h2><p>Empresas com dor provavel antes de virar oportunidade</p></div><button>Novo lead <ChevronRight size={16} /></button></div>
+          <div className="panel-head"><div><h2>Leads priorizados</h2><p>Empresas com dor provavel antes de virar oportunidade</p></div><button onClick={onNew}>Novo lead <ChevronRight size={16} /></button></div>
           <div className="prospect-list">
             {prospects.map((prospect) => (
               <article className="prospect-card" key={prospect.company}>
@@ -427,6 +653,7 @@ function ProspectionModule({ prospects }: { prospects: Prospect[] }) {
                 <div className="prospect-tags"><em>{prospect.temperature}</em><strong>{prospect.status}</strong><span>{prospect.channel}</span></div>
                 <div className="pain-box"><small>Dor provavel</small><b>{prospect.pain}</b></div>
                 <footer><span>{prospect.source}</span><strong>{prospect.nextAction}</strong></footer>
+                <div className="record-actions"><button onClick={() => onOpen(prospect)}>Abrir</button><button onClick={() => onEdit(prospect)}>Editar</button></div>
               </article>
             ))}
           </div>
@@ -450,17 +677,17 @@ function ProspectionModule({ prospects }: { prospects: Prospect[] }) {
   );
 }
 
-function PipelineModule({ deals, setForm, setModal }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void }) {
+function PipelineModule({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
   return (
     <section className="panel pipeline-panel">
       <div className="panel-head"><div><h2>Pipeline de vendas</h2><p>Acompanhe suas negociacoes por etapa</p></div><button onClick={() => setModal(true)}>Nova oportunidade <ChevronRight size={16} /></button></div>
       <div className="pipeline-summary"><div><span className="live-dot" /> <b>{deals.length} oportunidades ativas</b></div><strong>{brl(deals.reduce((sum, deal) => sum + deal.value, 0))}</strong></div>
-      <Kanban deals={deals} setForm={setForm} setModal={setModal} />
+      <Kanban deals={deals} setForm={setForm} setModal={setModal} onOpen={onOpen} onEdit={onEdit} />
     </section>
   );
 }
 
-function Kanban({ deals, setForm, setModal }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void }) {
+function Kanban({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
   return (
     <div className="kanban">
       {stages.map((stage, index) => {
@@ -469,7 +696,7 @@ function Kanban({ deals, setForm, setModal }: { deals: Deal[]; setForm: React.Di
           <div className="column" key={stage}>
             <div className="column-head"><span className={`stage-dot s${index}`} /><b>{stage}</b><em>{stageDeals.length}</em><small>{brl(stageDeals.reduce((sum, deal) => sum + deal.value, 0))}</small></div>
             <div className="cards">
-              {stageDeals.map((deal) => <DealCard key={deal.id} deal={deal} />)}
+              {stageDeals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} onEdit={onEdit} />)}
               <button className="add-card" onClick={() => { setForm((form) => ({ ...form, stage })); setModal(true); }}><Plus size={15} /> Adicionar oportunidade</button>
             </div>
           </div>
@@ -479,7 +706,7 @@ function Kanban({ deals, setForm, setModal }: { deals: Deal[]; setForm: React.Di
   );
 }
 
-function DealCard({ deal }: { deal: Deal }) {
+function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
   return (
     <article className="deal-card">
       <div className="deal-top"><div className="company-avatar" style={{ background: deal.color }}>{deal.initials}</div><span className="tag">{deal.tag}</span><button aria-label="Mais opcoes"><MoreHorizontal size={17} /></button></div>
@@ -487,14 +714,15 @@ function DealCard({ deal }: { deal: Deal }) {
       <p>{deal.company}</p>
       <strong>{brl(deal.value)}</strong>
       <div className="deal-footer"><span><Clock3 size={13} /> {deal.due}</span><span className="person">{deal.person.slice(0, 1)}</span></div>
+      <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir</button><button onClick={() => onEdit(deal)}>Editar</button></div>
     </article>
   );
 }
 
-function ContactsModule({ contacts }: { contacts: Contact[] }) {
+function ContactsModule({ contacts, onOpen, onEdit, onNew }: { contacts: Contact[]; onOpen: (contact: Contact) => void; onEdit: (contact: Contact) => void; onNew: () => void }) {
   return (
     <section className="panel data-panel">
-      <div className="panel-head"><div><h2>Contatos</h2><p>Decisores e influenciadores das oportunidades</p></div><button>Novo contato <ChevronRight size={16} /></button></div>
+      <div className="panel-head"><div><h2>Contatos</h2><p>Decisores e influenciadores das oportunidades</p></div><button onClick={onNew}>Novo contato <ChevronRight size={16} /></button></div>
       <div className="table-list">
         {contacts.map((contact) => (
           <article className="row-card" key={contact.email}>
@@ -503,6 +731,7 @@ function ContactsModule({ contacts }: { contacts: Contact[] }) {
             <div><small>Status</small><strong>{contact.status}</strong></div>
             <div><small>Proxima acao</small><strong>{contact.next}</strong></div>
             <div className="row-actions"><span>{contact.phone}</span><span>{contact.email}</span></div>
+            <div className="record-actions row-record-actions"><button onClick={() => onOpen(contact)}>Abrir</button><button onClick={() => onEdit(contact)}>Editar</button></div>
           </article>
         ))}
       </div>
@@ -510,10 +739,10 @@ function ContactsModule({ contacts }: { contacts: Contact[] }) {
   );
 }
 
-function CompaniesModule({ companies }: { companies: Company[] }) {
+function CompaniesModule({ companies, onOpen, onEdit, onNew }: { companies: Company[]; onOpen: (company: Company) => void; onEdit: (company: Company) => void; onNew: () => void }) {
   return (
     <section className="panel data-panel">
-      <div className="panel-head"><div><h2>Empresas</h2><p>Contas qualificadas para consultoria, sistemas e automacoes</p></div><button>Nova empresa <ChevronRight size={16} /></button></div>
+      <div className="panel-head"><div><h2>Empresas</h2><p>Contas qualificadas para consultoria, sistemas e automacoes</p></div><button onClick={onNew}>Nova empresa <ChevronRight size={16} /></button></div>
       <div className="company-grid">
         {companies.map((company) => (
           <article className="company-card" key={company.name}>
@@ -522,6 +751,7 @@ function CompaniesModule({ companies }: { companies: Company[] }) {
             <p>{company.segment} - {company.size}</p>
             <div className="pain-box"><small>Dor principal</small><b>{company.pain}</b></div>
             <footer><span>{company.owner}</span><strong>{brl(company.value)}</strong></footer>
+            <div className="record-actions"><button onClick={() => onOpen(company)}>Abrir</button><button onClick={() => onEdit(company)}>Editar</button></div>
           </article>
         ))}
       </div>
@@ -529,10 +759,10 @@ function CompaniesModule({ companies }: { companies: Company[] }) {
   );
 }
 
-function TasksModule({ tasks }: { tasks: Task[] }) {
+function TasksModule({ tasks, onOpen, onEdit, onNew }: { tasks: Task[]; onOpen: (task: Task) => void; onEdit: (task: Task) => void; onNew: () => void }) {
   return (
     <section className="panel data-panel">
-      <div className="panel-head"><div><h2>Tarefas</h2><p>Rotina comercial para manter o funil em movimento</p></div><button>Nova tarefa <ChevronRight size={16} /></button></div>
+      <div className="panel-head"><div><h2>Tarefas</h2><p>Rotina comercial para manter o funil em movimento</p></div><button onClick={onNew}>Nova tarefa <ChevronRight size={16} /></button></div>
       <div className="task-board">
         {tasks.map((task) => (
           <article className={task.done ? "task-card done" : "task-card"} key={`${task.company}-${task.title}`}>
@@ -540,6 +770,7 @@ function TasksModule({ tasks }: { tasks: Task[] }) {
             <div><b>{task.title}</b><span>{task.company} - {task.type}</span></div>
             <time>{task.time}</time>
             <em>{task.priority}</em>
+            <div className="record-actions row-record-actions"><button onClick={() => onOpen(task)}>Abrir</button><button onClick={() => onEdit(task)}>Editar</button></div>
           </article>
         ))}
       </div>
@@ -547,10 +778,10 @@ function TasksModule({ tasks }: { tasks: Task[] }) {
   );
 }
 
-function SolutionsModule({ solutions }: { solutions: Solution[] }) {
+function SolutionsModule({ solutions, onOpen, onEdit, onNew }: { solutions: Solution[]; onOpen: (solution: Solution) => void; onEdit: (solution: Solution) => void; onNew: () => void }) {
   return (
     <section className="panel data-panel">
-      <div className="panel-head"><div><h2>Solucoes Sykron</h2><p>Catalogo comercial para transformar dores em ofertas</p></div><button>Nova solucao <ChevronRight size={16} /></button></div>
+      <div className="panel-head"><div><h2>Solucoes Sykron</h2><p>Catalogo comercial para transformar dores em ofertas</p></div><button onClick={onNew}>Nova solucao <ChevronRight size={16} /></button></div>
       <div className="solutions-grid">
         {solutions.map((solution) => (
           <article className="solution-card" key={solution.name}>
@@ -559,10 +790,60 @@ function SolutionsModule({ solutions }: { solutions: Solution[] }) {
             <h3>{solution.name}</h3>
             <p>{solution.description}</p>
             <footer><b>{solution.price}</b><em>{solution.leads} leads</em></footer>
+            <div className="record-actions"><button onClick={() => onOpen(solution)}>Abrir</button><button onClick={() => onEdit(solution)}>Editar</button></div>
           </article>
         ))}
       </div>
     </section>
+  );
+}
+
+function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { editor: EditorState; draft: Draft; setDraft: React.Dispatch<React.SetStateAction<Draft>>; onClose: () => void; onEdit: () => void; onSubmit: (event: React.FormEvent) => void }) {
+  const fields = editorFields[editor.kind];
+  const isEditing = editor.mode === "edit";
+  const title = editor.key === "__new__" ? `Novo ${entityLabels[editor.kind]}` : `Detalhes do ${entityLabels[editor.kind]}`;
+
+  return (
+    <div className="modal-backdrop" onMouseDown={onClose}>
+      <div className="modal record-modal" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="modal-head">
+          <div><span className="modal-icon"><BriefcaseBusiness size={20} /></span><div><h2>{title}</h2><p>{isEditing ? "Edite os campos e salve as informacoes." : "Visualize a informacao cadastrada."}</p></div></div>
+          <button onClick={onClose} aria-label="Fechar"><X size={20} /></button>
+        </div>
+
+        {isEditing ? (
+          <form onSubmit={onSubmit}>
+            <div className="editor-grid">
+              {fields.map((field) => (
+                <label key={field.name} className={field.type === "textarea" ? "wide-field" : ""}>
+                  {field.label}
+                  {field.type === "select" ? (
+                    <select value={draft[field.name] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field.name]: event.target.value }))}>
+                      {field.options?.map((option) => <option key={option}>{option}</option>)}
+                    </select>
+                  ) : field.type === "textarea" ? (
+                    <textarea value={draft[field.name] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field.name]: event.target.value }))} />
+                  ) : (
+                    <input type={field.type === "number" ? "number" : "text"} value={draft[field.name] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field.name]: event.target.value }))} />
+                  )}
+                </label>
+              ))}
+            </div>
+            <div className="modal-actions"><button type="button" className="cancel" onClick={onClose}>Cancelar</button><button className="primary" type="submit">Salvar informacoes</button></div>
+          </form>
+        ) : (
+          <div className="record-view">
+            {fields.map((field) => (
+              <div key={field.name} className={field.type === "textarea" ? "wide-field" : ""}>
+                <small>{field.label}</small>
+                <b>{draft[field.name] || "Nao informado"}</b>
+              </div>
+            ))}
+            <div className="modal-actions"><button type="button" className="cancel" onClick={onClose}>Fechar</button><button className="primary" type="button" onClick={onEdit}>Editar informacoes</button></div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
