@@ -42,6 +42,8 @@ type Deal = {
   color: string;
   due: string;
   tag: string;
+  historyTimeline: string;
+  lessonsLearned: string;
 };
 
 type Company = {
@@ -114,12 +116,12 @@ const returnPeriodByTemperature: Record<string, string> = {
 };
 
 const initialDeals: Deal[] = [
-  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda" },
-  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Quente", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up" },
-  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Morno", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao" },
-  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Frio", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores" },
-  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Bolsao", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao" },
-  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil" },
+  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda", historyTimeline: "22/07/2026 - Pesquisa inicial - WhatsApp publico identificado - Objecao ainda nao mapeada - Proximo: enviar abordagem curta.\n22/07/2026 - Hipotese de dor - Agenda e retornos podem estar soltos no WhatsApp - Proximo: oferecer diagnostico simples.", lessonsLearned: "Negocios de estetica precisam enxergar ganho rapido: menos esquecimento, mais retorno e controle simples sem sistema pesado." },
+  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Quente", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up", historyTimeline: "22/07/2026 - Diagnostico preliminar - Servicos recorrentes identificados - Objecao provavel: medo de ferramenta complicada - Proximo: mostrar modelo visual simples.\n22/07/2026 - Ideia de oferta - Controle de pacotes, agenda e lembretes - Proximo: validar rotina atual.", lessonsLearned: "Pet shops entendem melhor quando a proposta fala de recorrencia, lembrete e retorno de clientes, nao de tecnologia." },
+  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Morno", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao", historyTimeline: "22/07/2026 - Pesquisa inicial - Delivery e atendimento por WhatsApp identificados - Proximo: abordar com controle de pedidos e recompra.\n22/07/2026 - Aprendizado da conta - Oferta deve ser pequena e operacional - Proximo: perguntar como controlam pedidos hoje.", lessonsLearned: "Quando existe delivery, o melhor gancho e reduzir perda de pedidos e melhorar recompra, antes de falar em automacao." },
+  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Frio", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores", historyTimeline: "22/07/2026 - Pesquisa inicial - Varias especialidades e agenda por WhatsApp - Objecao provavel: decisao mais formal - Proximo: identificar gestor responsavel.\n22/07/2026 - Possivel proposta - Indicadores de agenda, conversao e salas - Proximo: abordagem consultiva sem pressao.", lessonsLearned: "Clinicas maiores podem pedir mais credibilidade; levar exemplo visual e falar com gestor administrativo aumenta chance." },
+  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Bolsao", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao", historyTimeline: "22/07/2026 - Pesquisa inicial - Atendimento 24h e servicos recorrentes - Proximo: nutrir com exemplo de lembretes.\n22/07/2026 - Hipotese de dor - Retornos, vacinas, banho e exames podem precisar de controle - Proximo: aguardar momento melhor.", lessonsLearned: "Leads em bolsao nao devem receber pressao; melhor nutrir com caso de uso simples e retornar depois." },
+  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil", historyTimeline: "22/07/2026 - Pesquisa inicial - Aula demonstrativa e varios cursos - Proximo: pedir responsavel comercial.\n22/07/2026 - Oferta sugerida - Funil de interessados, follow-up e rematriculas - Proximo: enviar exemplo de controle.", lessonsLearned: "Escolas compram melhor quando a solucao promete nao perder interessados e melhorar rematricula." },
 ];
 
 const companies: Company[] = [
@@ -338,6 +340,7 @@ const whatsappHref = (phone: string) => {
   return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
 };
 const temperatureClass = (temperature: string) => temperature.toLowerCase().replace("super quente", "super-hot").replace("quente", "hot").replace("morno", "warm").replace("frio", "cold").replace("bolsao", "pool");
+const latestHistoryStep = (timeline: string) => timeline.split("\n").map((line) => line.trim()).filter(Boolean).at(-1) || "Nenhum desdobramento registrado.";
 
 const nav = [
   ["Visao geral", LayoutDashboard],
@@ -377,6 +380,8 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "due", label: "Proxima acao" },
     { name: "tag", label: "Tipo de solucao" },
     { name: "history", label: "Historico da negociacao", type: "textarea" },
+    { name: "historyTimeline", label: "Desdobramentos do historico", type: "textarea" },
+    { name: "lessonsLearned", label: "Licoes aprendidas sobre o cliente", type: "textarea" },
   ],
   contact: [
     { name: "name", label: "Nome" },
@@ -414,7 +419,7 @@ const editorFields: Record<EntityKind, EditorField[]> = {
 
 const emptyDrafts: Record<EntityKind, Draft> = {
   prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Morno", channel: "WhatsApp", nextAction: "", message: "" },
-  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "" },
+  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "Data - visita/conversa - o que aconteceu - objecao - proximo passo", lessonsLearned: "" },
   contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
   company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
   task: { time: "", title: "", company: "", type: "", priority: "Media" },
@@ -490,6 +495,8 @@ export default function Home() {
         bucket: returnPeriodByTemperature.Morno,
         nextContact: "Definir proximo contato",
         history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
+        historyTimeline: "Data - visita/conversa - o que aconteceu - objecao - proximo passo",
+        lessonsLearned: "Registrar aqui o que esse cliente ensina sobre abordagem, objecoes e decisao.",
         person: "Jefferson",
         initials: form.company.slice(0, 2).toUpperCase(),
         color: "#00b9f2",
@@ -515,7 +522,7 @@ export default function Home() {
   function draftFrom(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution): Draft {
     if (kind === "deal") {
       const deal = item as Deal;
-      return { company: deal.company, title: deal.title, value: String(deal.value), stage: deal.stage, temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history };
+      return { company: deal.company, title: deal.title, value: String(deal.value), stage: deal.stage, temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history, historyTimeline: deal.historyTimeline, lessonsLearned: deal.lessonsLearned };
     }
 
     if (kind === "company") {
@@ -580,6 +587,8 @@ export default function Home() {
           bucket: returnPeriod,
           nextContact: `${returnPeriod} - ${next.nextAction}`,
           history: `Lead qualificado a partir da prospeccao. Dor provavel: ${next.pain} Abordagem sugerida: ${next.message}`,
+          historyTimeline: `22/07/2026 - Lead qualificado - Veio da prospeccao com status Qualificado - Dor: ${next.pain} - Proximo: ${next.nextAction}`,
+          lessonsLearned: "Registrar depois da primeira conversa quais argumentos funcionaram, quais objecoes apareceram e quem decide.",
           person: "Jefferson",
           initials: next.company.slice(0, 2).toUpperCase(),
           color: "#00b9f2",
@@ -598,6 +607,7 @@ export default function Home() {
                 bucket: returnPeriod,
                 nextContact: `${returnPeriod} - ${next.nextAction}`,
                 history: `${deal.history} Atualizado pela prospeccao: lead marcado como Qualificado. Dor provavel: ${next.pain}`,
+                historyTimeline: `${deal.historyTimeline}\n22/07/2026 - Atualizacao pela prospeccao - Lead marcado como Qualificado - Dor: ${next.pain} - Proximo: ${next.nextAction}`,
                 due: returnPeriod,
               }
             : deal);
@@ -620,6 +630,8 @@ export default function Home() {
         bucket: returnPeriod,
         nextContact: draft.nextContact || `Retornar em ${returnPeriod}`,
         history: draft.history || "Historico ainda nao registrado.",
+        historyTimeline: draft.historyTimeline || "Data - visita/conversa - o que aconteceu - objecao - proximo passo",
+        lessonsLearned: draft.lessonsLearned || "Licoes ainda nao registradas.",
         person: draft.person || "Jefferson",
         initials: (draft.company || "NE").slice(0, 2).toUpperCase(),
         color: "#00b9f2",
@@ -949,6 +961,8 @@ function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) =
       </div>
       <div className="next-contact"><Clock3 size={13} /><span>{deal.nextContact}</span></div>
       <div className="history-preview"><small>Historico</small><span>{deal.history}</span></div>
+      <div className="timeline-preview"><small>Ultimo desdobramento</small><span>{latestHistoryStep(deal.historyTimeline)}</span></div>
+      <div className="lesson-preview"><small>Licao aprendida</small><span>{deal.lessonsLearned}</span></div>
       <strong>{brl(deal.value)}</strong>
       <div className="deal-footer"><span><Clock3 size={13} /> {deal.due}</span><span className="person">{deal.person.slice(0, 1)}</span></div>
       <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir</button><button onClick={() => onEdit(deal)}>Editar</button></div>
