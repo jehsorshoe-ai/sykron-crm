@@ -1079,12 +1079,29 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
     <div className="modal-backdrop" onMouseDown={onClose}>
       <div className="modal record-modal" onMouseDown={(event) => event.stopPropagation()}>
         <div className="modal-head">
-          <div><span className="modal-icon"><BriefcaseBusiness size={20} /></span><div><h2>{title}</h2><p>{isEditing ? "Edite os campos e salve as informacoes." : "Visualize a informacao cadastrada."}</p></div></div>
+          <div><span className="modal-icon"><BriefcaseBusiness size={20} /></span><div><h2>{title}</h2><p>{isDeal ? "Controle negociacao, continuidades, aprendizados e proximos passos." : isEditing ? "Edite os campos e salve as informacoes." : "Visualize a informacao cadastrada."}</p></div></div>
           <button onClick={onClose} aria-label="Fechar"><X size={20} /></button>
         </div>
 
         {isEditing ? (
           <form onSubmit={onSubmit}>
+            {isDeal && (
+              <section className="history-builder featured-history-builder">
+                <div className="history-builder-head">
+                  <div><h3>Continuidades da negociacao</h3><p>Use este bloco para adicionar uma nova visita, conversa, objecao, decisao ou proximo passo do cliente.</p></div>
+                  <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
+                </div>
+
+                <div className="history-entry-grid">
+                  <label>Data<input placeholder="Ex.: 22/07/2026" value={historyEntry.date} onChange={(event) => setHistoryEntry((current) => ({ ...current, date: event.target.value }))} /></label>
+                  <label>Tipo<select value={historyEntry.type} onChange={(event) => setHistoryEntry((current) => ({ ...current, type: event.target.value }))}><option>Visita</option><option>Ligacao</option><option>WhatsApp</option><option>Reuniao</option><option>Proposta</option><option>Follow-up</option><option>Aprendizado</option></select></label>
+                  <label className="wide-field">O que aconteceu<textarea placeholder="Resumo da conversa, visita, percepcao ou decisao do cliente" value={historyEntry.detail} onChange={(event) => setHistoryEntry((current) => ({ ...current, detail: event.target.value }))} /></label>
+                  <label>Objecao / risco<input placeholder="Ex.: achou caro, precisa falar com socio..." value={historyEntry.objection} onChange={(event) => setHistoryEntry((current) => ({ ...current, objection: event.target.value }))} /></label>
+                  <label>Proximo passo<input placeholder="Ex.: retornar sexta com exemplo visual" value={historyEntry.next} onChange={(event) => setHistoryEntry((current) => ({ ...current, next: event.target.value }))} /></label>
+                </div>
+                <button type="button" className="add-history-step" onClick={addHistoryStep}>+ Adicionar continuidade</button>
+              </section>
+            )}
             <div className="editor-grid">
               {fields.map((field) => (
                 <label key={field.name} className={field.type === "textarea" ? "wide-field" : ""}>
