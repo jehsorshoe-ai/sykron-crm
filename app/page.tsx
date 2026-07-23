@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
   Bot,
@@ -450,6 +450,21 @@ export default function Home() {
   const [form, setForm] = useState({ company: "", title: "", value: "", stage: "Novos leads" });
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [draft, setDraft] = useState<Draft>({});
+
+  useEffect(() => {
+    const overlayOpen = modal || Boolean(editor);
+    if (!overlayOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousOverscrollBehavior = document.body.style.overscrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.overscrollBehavior = previousOverscrollBehavior;
+    };
+  }, [modal, editor]);
 
   const filteredDeals = useMemo(() => {
     const term = query.toLowerCase();
