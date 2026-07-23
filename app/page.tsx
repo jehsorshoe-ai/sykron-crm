@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { createClient } from "../lib/supabase/client";
+import { loadCloudCrm, saveCloudDeal, saveCloudInteractions, saveCloudProspect, type CloudDeal, type CloudInteraction, type CloudProspect } from "../lib/supabase/crm";
 import {
   Bell,
   Bot,
@@ -387,6 +390,60 @@ const timelineInteractions = (timeline: string, raw?: string) => {
   const structured = parseInteractions(raw);
   return structured.length ? structured : historySteps(timeline).map(legacyInteraction);
 };
+const cloudToLocalInteraction = (item: CloudInteraction): Interaction => ({
+  id: item.local_id,
+  date: item.date,
+  type: item.type,
+  detail: item.detail,
+  pain: item.pain || "",
+  objection: item.objection || "",
+  solution: item.solution || "",
+  next: item.next || "",
+  returnDate: item.return_date || "",
+  status: item.status || "",
+  temperature: item.temperature || "",
+  owner: item.owner_name || "Jefferson",
+  link: item.link || "",
+});
+const cloudDealToLocal = (item: CloudDeal, interactions: CloudInteraction[]): Deal => ({
+  id: Number(item.local_id),
+  company: item.company,
+  title: item.title,
+  value: Number(item.value) || 0,
+  stage: item.stage,
+  temperature: item.temperature,
+  bucket: item.bucket,
+  nextContact: item.next_contact,
+  history: item.history,
+  person: item.person || "Jefferson",
+  initials: item.company.slice(0, 2).toUpperCase(),
+  color: "#00b9f2",
+  due: item.due,
+  tag: item.tag,
+  historyTimeline: item.history_timeline || "",
+  interactions: interactions.filter((entry) => entry.entity_type === "deal" && entry.entity_key === String(item.local_id)).map(cloudToLocalInteraction),
+});
+const cloudProspectToLocal = (item: CloudProspect, interactions: CloudInteraction[]): Prospect => ({
+  company: item.company,
+  segment: item.segment,
+  size: item.size,
+  whatsapp: item.whatsapp,
+  site: item.site,
+  contactHint: item.contact_hint,
+  ease: item.ease,
+  source: item.source,
+  pain: item.pain,
+  status: item.status,
+  temperature: item.temperature,
+  channel: item.channel,
+  nextAction: item.next_action,
+  message: item.message,
+  historyTimeline: item.history_timeline || "",
+  lastInteraction: item.last_interaction || "Pesquisa inicial",
+  nextReturn: item.next_return || "Definir retorno",
+  potential: Number(item.potential) || 0,
+  interactions: interactions.filter((entry) => entry.entity_type === "prospect" && entry.entity_key === item.record_key).map(cloudToLocalInteraction),
+});
 
 const nav = [
   ["Visao geral", LayoutDashboard],
@@ -483,6 +540,7 @@ const entityLabels: Record<EntityKind, string> = {
 };
 
 export default function Home() {
+  const supabase = useMemo(() => createClient(), []);
   const [active, setActive] = useState("Visao geral");
   const [deals, setDeals] = useState(initialDeals);
   const [prospectList, setProspectList] = useState(prospects);
@@ -497,6 +555,48 @@ export default function Home() {
   const [form, setForm] = useState({ company: "", title: "", value: "", stage: "Lead novo" });
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [draft, setDraft] = useState<Draft>({});
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(Boolean(supabase));
+  const [cloudSyncing, setCloudSyncing] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let activeSubscription = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (activeSubscription) {
+        setSession(data.session);
+        setAuthLoading(false);
+      }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthLoading(false);
+    });
+    return () => {
+      activeSubscription = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!supabase || !session?.user.id) return;
+    let cancelled = false;
+    setCloudSyncing(true);
+    loadCloudCrm(supabase, session.user.id).then(async (cloud) => {
+      if (cancelled) return;
+      if (!cloud.deals.length) await Promise.all(initialDeals.map((deal) => saveCloudDeal(supabase, session.user.id, deal as unknown as Record<string, unknown>)));
+      if (!cloud.prospects.length) await Promise.all(prospects.map((prospect) => saveCloudProspect(supabase, session.user.id, prospect as unknown as Record<string, unknown>)));
+      if (cloud.deals.length) setDeals(cloud.deals.map((item) => cloudDealToLocal(item, cloud.interactions)));
+      if (cloud.prospects.length) setProspectList(cloud.prospects.map((item) => cloudProspectToLocal(item, cloud.interactions)));
+      setCloudSyncing(false);
+    }).catch((error) => {
+      if (cancelled) return;
+      setCloudSyncing(false);
+      setToast(`Falha ao carregar dados online: ${error.message || "verifique o schema do Supabase"}`);
+      setTimeout(() => setToast(""), 4200);
+    });
+    return () => { cancelled = true; };
+  }, [supabase, session?.user.id]);
 
   useEffect(() => {
     const overlayOpen = modal || Boolean(editor);
@@ -541,31 +641,86 @@ export default function Home() {
   const total = deals.reduce((sum, deal) => sum + deal.value, 0);
   const openTasks = taskList.filter((task) => !task.done).length;
 
+  function persistDeal(deal: Deal) {
+    if (!supabase || !session?.user.id) return;
+    const cloudInteractions: CloudInteraction[] = (deal.interactions || []).map((item) => ({
+      local_id: item.id,
+      entity_type: "deal",
+      entity_key: String(deal.id),
+      date: item.date,
+      type: item.type,
+      detail: item.detail,
+      pain: item.pain,
+      objection: item.objection,
+      solution: item.solution,
+      next: item.next,
+      return_date: item.returnDate,
+      status: item.status,
+      temperature: item.temperature,
+      owner_name: item.owner,
+      link: item.link,
+    }));
+    Promise.all([
+      saveCloudDeal(supabase, session.user.id, deal as unknown as Record<string, unknown>),
+      saveCloudInteractions(supabase, session.user.id, "deal", String(deal.id), cloudInteractions),
+    ]).catch((error) => {
+      setToast(`Nao foi possivel sincronizar: ${error.message || "verifique o banco online"}`);
+      setTimeout(() => setToast(""), 4200);
+    });
+  }
+
+  function persistProspect(prospect: Prospect) {
+    if (!supabase || !session?.user.id) return;
+    const cloudInteractions: CloudInteraction[] = (prospect.interactions || []).map((item) => ({
+      local_id: item.id,
+      entity_type: "prospect",
+      entity_key: prospect.company,
+      date: item.date,
+      type: item.type,
+      detail: item.detail,
+      pain: item.pain,
+      objection: item.objection,
+      solution: item.solution,
+      next: item.next,
+      return_date: item.returnDate,
+      status: item.status,
+      temperature: item.temperature,
+      owner_name: item.owner,
+      link: item.link,
+    }));
+    Promise.all([
+      saveCloudProspect(supabase, session.user.id, prospect as unknown as Record<string, unknown>),
+      saveCloudInteractions(supabase, session.user.id, "prospect", prospect.company, cloudInteractions),
+    ]).catch((error) => {
+      setToast(`Nao foi possivel sincronizar: ${error.message || "verifique o banco online"}`);
+      setTimeout(() => setToast(""), 4200);
+    });
+  }
+
   function addDeal(e: React.FormEvent) {
     e.preventDefault();
     if (!form.company || !form.title) return;
 
-    setDeals((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        company: form.company,
-        title: form.title,
-        value: Number(form.value) || 0,
-        stage: form.stage,
-        temperature: "Morno",
-        bucket: returnPeriodByTemperature.Morno,
-        nextContact: "Definir proximo contato",
-        history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
-        historyTimeline: "22/07/2026 - Criacao manual - Oportunidade criada diretamente no funil - Objecao ainda nao mapeada - Definir proximo contato",
-        interactions: [],
-        person: "Jefferson",
-        initials: form.company.slice(0, 2).toUpperCase(),
-        color: "#00b9f2",
-        due: "Novo",
-        tag: "Solucao",
-      },
-    ]);
+    const nextDeal: Deal = {
+      id: Date.now(),
+      company: form.company,
+      title: form.title,
+      value: Number(form.value) || 0,
+      stage: form.stage,
+      temperature: "Morno",
+      bucket: returnPeriodByTemperature.Morno,
+      nextContact: "Definir proximo contato",
+      history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
+      historyTimeline: "22/07/2026 - Criacao manual - Oportunidade criada diretamente no funil - Objecao ainda nao mapeada - Definir proximo contato",
+      interactions: [],
+      person: "Jefferson",
+      initials: form.company.slice(0, 2).toUpperCase(),
+      color: "#00b9f2",
+      due: "Novo",
+      tag: "Solucao",
+    };
+    setDeals((prev) => [...prev, nextDeal]);
+    persistDeal(nextDeal);
     setForm({ company: "", title: "", value: "", stage: "Lead novo" });
     setModal(false);
     setToast("Oportunidade criada com sucesso");
@@ -646,6 +801,7 @@ export default function Home() {
         message: draft.message || "Mensagem consultiva ainda nao definida.",
       };
       setProspectList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("prospect", item) === editor.key ? next : item));
+      persistProspect(next);
 
       if (next.status === "Qualificado") {
         const returnPeriod = returnPeriodByTemperature[selectedTemperature] || "7 dias";
@@ -667,6 +823,7 @@ export default function Home() {
           due: returnPeriod,
           tag: "Diagnostico",
         };
+        persistDeal(qualifiedDeal);
 
         setDeals((prev) => {
           const existing = prev.find((deal) => deal.company.toLowerCase() === next.company.toLowerCase());
@@ -712,6 +869,7 @@ export default function Home() {
         tag: draft.tag || "Solucao",
       };
       setDeals((prev) => isNew ? [next, ...prev] : prev.map((item) => String(item.id) === editor.key ? next : item));
+      persistDeal(next);
     }
 
     if (editor.kind === "contact") {
@@ -767,6 +925,9 @@ export default function Home() {
     setTimeout(() => setToast(""), 2800);
   }
 
+  if (supabase && authLoading) return <CloudLoading />;
+  if (supabase && !session) return <AuthScreen client={supabase} />;
+
   return (
     <div className="app-shell">
       <aside className={menu ? "sidebar open" : "sidebar"}>
@@ -801,7 +962,7 @@ export default function Home() {
             <button onClick={() => setActive("Funil de vendas")}>Ver planejamento</button>
           </div>
           <button className="settings"><Settings size={18} /> Configuracoes</button>
-          <div className="profile"><div className="profile-avatar">JO</div><div><b>Jefferson Oliveira</b><small>Administrador</small></div><MoreHorizontal size={18} /></div>
+          <div className="profile"><div className="profile-avatar">JO</div><div><b>Jefferson Oliveira</b><small>{session?.user.email || "Administrador"}</small></div>{supabase && session ? <button className="logout-button" onClick={() => supabase.auth.signOut()}>Sair</button> : <MoreHorizontal size={18} />}</div>
         </div>
       </aside>
 
@@ -809,6 +970,7 @@ export default function Home() {
         <header className="topbar">
           <button className="menu-mobile" onClick={() => setMenu(true)} aria-label="Abrir menu"><Menu size={22} /></button>
           <div className="search"><Search size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar clientes, oportunidades..." /></div>
+          {supabase && session && <span className="cloud-status">{cloudSyncing ? "Sincronizando..." : "Online"}</span>}
           <button className="icon-btn" aria-label="Notificacoes"><Bell size={19} /><span /></button>
           <button className="primary" onClick={() => setModal(true)}><Plus size={18} /> Nova oportunidade</button>
         </header>
@@ -1130,6 +1292,51 @@ function SolutionsModule({ solutions, onOpen, onEdit, onNew }: { solutions: Solu
         ))}
       </div>
     </section>
+  );
+}
+
+function CloudLoading() {
+  return <div className="cloud-screen"><div className="cloud-screen-card"><div className="cloud-spinner" /><h1>Conectando o CRM Sykron</h1><p>Verificando sua sessao e carregando os registros online.</p></div></div>;
+}
+
+function AuthScreen({ client }: { client: NonNullable<ReturnType<typeof createClient>> }) {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const result = mode === "login"
+      ? await client.auth.signInWithPassword({ email, password })
+      : await client.auth.signUp({ email, password });
+    setBusy(false);
+    if (result.error) {
+      setMessage(result.error.message);
+      return;
+    }
+    if (mode === "signup" && !result.data.session) setMessage("Cadastro criado. Confirme o e-mail para entrar.");
+  }
+
+  return (
+    <div className="cloud-screen">
+      <div className="cloud-screen-card auth-card">
+        <div className="auth-brand"><span className="sykron-diamond" /> SYKRON</div>
+        <p className="eyebrow">CRM COMERCIAL ONLINE</p>
+        <h1>{mode === "login" ? "Entrar no CRM" : "Criar acesso"}</h1>
+        <p>Seus leads, oportunidades e historico ficam disponiveis em qualquer dispositivo.</p>
+        <form onSubmit={submit}>
+          <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required placeholder="voce@empresa.com" /></label>
+          <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} placeholder="Minimo de 6 caracteres" /></label>
+          {message && <div className="auth-message">{message}</div>}
+          <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar acesso"}</button>
+        </form>
+        <button className="auth-switch" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setMessage(""); }}>{mode === "login" ? "Ainda nao tenho acesso" : "Ja tenho uma conta"}</button>
+      </div>
+    </div>
   );
 }
 

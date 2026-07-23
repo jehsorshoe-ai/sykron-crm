@@ -80,3 +80,95 @@ create index if not exists companies_organization_idx on public.companies(organi
 create index if not exists contacts_organization_idx on public.contacts(organization_id);
 create index if not exists deals_organization_stage_idx on public.deals(organization_id, stage);
 create index if not exists tasks_organization_due_idx on public.tasks(organization_id, due_at);
+
+-- Sykron CRM: dados usados pelo aplicativo publicado no GitHub Pages.
+-- Execute este bloco no SQL Editor do projeto Supabase.
+create table if not exists public.crm_deals (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  local_id bigint not null,
+  company text not null,
+  title text not null,
+  value numeric(12,2) not null default 0,
+  stage text not null default 'Lead novo',
+  temperature text not null default 'Morno',
+  bucket text not null default '7 dias',
+  next_contact text not null default '',
+  history text not null default '',
+  person text not null default '',
+  due text not null default '',
+  tag text not null default '',
+  history_timeline text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner_id, local_id)
+);
+
+create table if not exists public.crm_prospects (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  record_key text not null,
+  company text not null,
+  segment text not null default '',
+  size text not null default '',
+  whatsapp text not null default '',
+  site text not null default '',
+  contact_hint text not null default '',
+  ease text not null default '',
+  source text not null default '',
+  pain text not null default '',
+  status text not null default 'Pesquisa',
+  temperature text not null default 'Morno',
+  channel text not null default 'WhatsApp',
+  next_action text not null default '',
+  message text not null default '',
+  history_timeline text not null default '',
+  last_interaction text not null default '',
+  next_return text not null default '',
+  potential numeric(12,2) not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner_id, record_key)
+);
+
+create table if not exists public.crm_interactions (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  entity_type text not null check (entity_type in ('deal','prospect')),
+  entity_key text not null,
+  local_id text not null,
+  date text not null default '',
+  type text not null default 'Contato',
+  detail text not null default '',
+  pain text,
+  objection text,
+  solution text,
+  next text,
+  return_date text,
+  status text,
+  temperature text,
+  owner_name text,
+  link text,
+  created_at timestamptz not null default now(),
+  unique (owner_id, entity_type, entity_key, local_id)
+);
+
+alter table public.crm_deals enable row level security;
+alter table public.crm_prospects enable row level security;
+alter table public.crm_interactions enable row level security;
+
+grant select, insert, update, delete on public.crm_deals, public.crm_prospects, public.crm_interactions to authenticated;
+
+create policy "owner_all_crm_deals" on public.crm_deals for all to authenticated
+using (owner_id = (select auth.uid()))
+with check (owner_id = (select auth.uid()));
+create policy "owner_all_crm_prospects" on public.crm_prospects for all to authenticated
+using (owner_id = (select auth.uid()))
+with check (owner_id = (select auth.uid()));
+create policy "owner_all_crm_interactions" on public.crm_interactions for all to authenticated
+using (owner_id = (select auth.uid()))
+with check (owner_id = (select auth.uid()));
+
+create index if not exists crm_deals_owner_idx on public.crm_deals(owner_id, updated_at desc);
+create index if not exists crm_prospects_owner_idx on public.crm_prospects(owner_id, updated_at desc);
+create index if not exists crm_interactions_entity_idx on public.crm_interactions(owner_id, entity_type, entity_key, created_at);
