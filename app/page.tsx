@@ -43,7 +43,6 @@ type Deal = {
   due: string;
   tag: string;
   historyTimeline: string;
-  lessonsLearned: string;
   interactions?: Interaction[];
 };
 
@@ -54,9 +53,11 @@ type Interaction = {
   detail: string;
   pain?: string;
   objection?: string;
+  solution?: string;
   next?: string;
   returnDate?: string;
   status?: string;
+  temperature?: string;
   owner?: string;
   link?: string;
 };
@@ -143,12 +144,12 @@ const returnPeriodByTemperature: Record<string, string> = {
 };
 
 const initialDeals: Deal[] = [
-  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda", historyTimeline: "22/07/2026 - Pesquisa inicial - WhatsApp publico identificado - Objecao ainda nao mapeada - Proximo: enviar abordagem curta.\n22/07/2026 - Hipotese de dor - Agenda e retornos podem estar soltos no WhatsApp - Proximo: oferecer diagnostico simples.", lessonsLearned: "Negocios de estetica precisam enxergar ganho rapido: menos esquecimento, mais retorno e controle simples sem sistema pesado." },
-  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Quente", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up", historyTimeline: "22/07/2026 - Diagnostico preliminar - Servicos recorrentes identificados - Objecao provavel: medo de ferramenta complicada - Proximo: mostrar modelo visual simples.\n22/07/2026 - Ideia de oferta - Controle de pacotes, agenda e lembretes - Proximo: validar rotina atual.", lessonsLearned: "Pet shops entendem melhor quando a proposta fala de recorrencia, lembrete e retorno de clientes, nao de tecnologia." },
-  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Morno", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao", historyTimeline: "22/07/2026 - Pesquisa inicial - Delivery e atendimento por WhatsApp identificados - Proximo: abordar com controle de pedidos e recompra.\n22/07/2026 - Aprendizado da conta - Oferta deve ser pequena e operacional - Proximo: perguntar como controlam pedidos hoje.", lessonsLearned: "Quando existe delivery, o melhor gancho e reduzir perda de pedidos e melhorar recompra, antes de falar em automacao." },
-  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Frio", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores", historyTimeline: "22/07/2026 - Pesquisa inicial - Varias especialidades e agenda por WhatsApp - Objecao provavel: decisao mais formal - Proximo: identificar gestor responsavel.\n22/07/2026 - Possivel proposta - Indicadores de agenda, conversao e salas - Proximo: abordagem consultiva sem pressao.", lessonsLearned: "Clinicas maiores podem pedir mais credibilidade; levar exemplo visual e falar com gestor administrativo aumenta chance." },
-  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Bolsao", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao", historyTimeline: "22/07/2026 - Pesquisa inicial - Atendimento 24h e servicos recorrentes - Proximo: nutrir com exemplo de lembretes.\n22/07/2026 - Hipotese de dor - Retornos, vacinas, banho e exames podem precisar de controle - Proximo: aguardar momento melhor.", lessonsLearned: "Leads em bolsao nao devem receber pressao; melhor nutrir com caso de uso simples e retornar depois." },
-  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil", historyTimeline: "22/07/2026 - Pesquisa inicial - Aula demonstrativa e varios cursos - Proximo: pedir responsavel comercial.\n22/07/2026 - Oferta sugerida - Funil de interessados, follow-up e rematriculas - Proximo: enviar exemplo de controle.", lessonsLearned: "Escolas compram melhor quando a solucao promete nao perder interessados e melhorar rematricula." },
+  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda", historyTimeline: "22/07/2026 - Pesquisa inicial - WhatsApp publico identificado - Objecao ainda nao mapeada - Proximo: enviar abordagem curta.\n22/07/2026 - Hipotese de dor - Agenda e retornos podem estar soltos no WhatsApp - Proximo: oferecer diagnostico simples." },
+  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Quente", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up", historyTimeline: "22/07/2026 - Diagnostico preliminar - Servicos recorrentes identificados - Objecao provavel: medo de ferramenta complicada - Proximo: mostrar modelo visual simples.\n22/07/2026 - Ideia de oferta - Controle de pacotes, agenda e lembretes - Proximo: validar rotina atual." },
+  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Morno", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao", historyTimeline: "22/07/2026 - Pesquisa inicial - Delivery e atendimento por WhatsApp identificados - Proximo: abordar com controle de pedidos e recompra.\n22/07/2026 - Aprendizado da conta - Oferta deve ser pequena e operacional - Proximo: perguntar como controlam pedidos hoje." },
+  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Frio", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores", historyTimeline: "22/07/2026 - Pesquisa inicial - Varias especialidades e agenda por WhatsApp - Objecao provavel: decisao mais formal - Proximo: identificar gestor responsavel.\n22/07/2026 - Possivel proposta - Indicadores de agenda, conversao e salas - Proximo: abordagem consultiva sem pressao." },
+  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Bolsao", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao", historyTimeline: "22/07/2026 - Pesquisa inicial - Atendimento 24h e servicos recorrentes - Proximo: nutrir com exemplo de lembretes.\n22/07/2026 - Hipotese de dor - Retornos, vacinas, banho e exames podem precisar de controle - Proximo: aguardar momento melhor." },
+  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil", historyTimeline: "22/07/2026 - Pesquisa inicial - Aula demonstrativa e varios cursos - Proximo: pedir responsavel comercial.\n22/07/2026 - Oferta sugerida - Funil de interessados, follow-up e rematriculas - Proximo: enviar exemplo de controle." },
 ];
 
 const companies: Company[] = [
@@ -368,7 +369,24 @@ const whatsappHref = (phone: string) => {
 };
 const temperatureClass = (temperature: string) => temperature.toLowerCase().replace("super quente", "super-hot").replace("quente", "hot").replace("morno", "warm").replace("frio", "cold").replace("bolsao", "pool");
 const historySteps = (timeline: string) => timeline.split("\n").map((line) => line.trim()).filter(Boolean);
-const latestHistoryStep = (timeline: string) => historySteps(timeline).at(-1) || "Nenhum desdobramento registrado.";
+const latestHistoryStep = (timeline: string) => historySteps(timeline).at(-1) || "Nenhuma interacao registrada.";
+const parseInteractions = (raw?: string) => {
+  if (!raw) return [] as Interaction[];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed as Interaction[] : [];
+  } catch {
+    return [] as Interaction[];
+  }
+};
+const legacyInteraction = (line: string, index: number): Interaction => {
+  const parts = line.split(" - ");
+  return { id: `legacy-${index}`, date: parts[0] || "Data nao informada", type: parts[1] || "Contato", detail: (parts.slice(2).join(" - ") || line).replace("Aprendizado da conta", "Analise da oportunidade") };
+};
+const timelineInteractions = (timeline: string, raw?: string) => {
+  const structured = parseInteractions(raw);
+  return structured.length ? structured : historySteps(timeline).map(legacyInteraction);
+};
 
 const nav = [
   ["Visao geral", LayoutDashboard],
@@ -411,7 +429,6 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "due", label: "Proxima acao" },
     { name: "tag", label: "Tipo de solucao" },
     { name: "history", label: "Historico da negociacao", type: "textarea" },
-    { name: "lessonsLearned", label: "Licoes aprendidas sobre o cliente", type: "textarea" },
   ],
   contact: [
     { name: "name", label: "Nome" },
@@ -449,7 +466,7 @@ const editorFields: Record<EntityKind, EditorField[]> = {
 
 const emptyDrafts: Record<EntityKind, Draft> = {
   prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Morno", channel: "WhatsApp", nextAction: "", lastInteraction: "Ainda nao registrado", nextReturn: "Definir retorno", potential: "0", message: "" },
-  deal: { company: "", title: "", value: "0", stage: "Lead novo", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "", lessonsLearned: "" },
+  deal: { company: "", title: "", value: "0", stage: "Lead novo", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "", interactions: "" },
   contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
   company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
   task: { time: "", title: "", company: "", type: "", priority: "Media" },
@@ -541,7 +558,7 @@ export default function Home() {
         nextContact: "Definir proximo contato",
         history: "Oportunidade criada manualmente. Registrar conversas, objecoes e combinados aqui.",
         historyTimeline: "22/07/2026 - Criacao manual - Oportunidade criada diretamente no funil - Objecao ainda nao mapeada - Definir proximo contato",
-        lessonsLearned: "Registrar aqui o que esse cliente ensina sobre abordagem, objecoes e decisao.",
+        interactions: [],
         person: "Jefferson",
         initials: form.company.slice(0, 2).toUpperCase(),
         color: "#00b9f2",
@@ -567,12 +584,12 @@ export default function Home() {
   function draftFrom(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution): Draft {
     if (kind === "deal") {
       const deal = item as Deal;
-      return { company: deal.company, title: deal.title, value: String(deal.value), stage: normalizeStage(deal.stage), temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history, historyTimeline: deal.historyTimeline, lessonsLearned: deal.lessonsLearned };
+      return { company: deal.company, title: deal.title, value: String(deal.value), stage: normalizeStage(deal.stage), temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history, historyTimeline: deal.historyTimeline, interactions: JSON.stringify(deal.interactions || []) };
     }
 
     if (kind === "prospect") {
       const prospect = item as Prospect;
-      return { company: prospect.company, segment: prospect.segment, size: prospect.size, whatsapp: prospect.whatsapp, site: prospect.site, contactHint: prospect.contactHint, ease: prospect.ease, source: prospect.source, pain: prospect.pain, status: prospect.status, temperature: prospect.temperature, channel: prospect.channel, nextAction: prospect.nextAction, lastInteraction: prospect.lastInteraction || "Pesquisa inicial", nextReturn: prospect.nextReturn || "Definir retorno", potential: String(prospect.potential || 0), historyTimeline: prospect.historyTimeline || "", message: prospect.message };
+      return { company: prospect.company, segment: prospect.segment, size: prospect.size, whatsapp: prospect.whatsapp, site: prospect.site, contactHint: prospect.contactHint, ease: prospect.ease, source: prospect.source, pain: prospect.pain, status: prospect.status, temperature: prospect.temperature, channel: prospect.channel, nextAction: prospect.nextAction, lastInteraction: prospect.lastInteraction || "Pesquisa inicial", nextReturn: prospect.nextReturn || "Definir retorno", potential: String(prospect.potential || 0), historyTimeline: prospect.historyTimeline || "", interactions: JSON.stringify(prospect.interactions || []), message: prospect.message };
     }
 
     if (kind === "company") {
@@ -625,6 +642,7 @@ export default function Home() {
         nextReturn: draft.nextReturn || "Definir retorno",
         potential: Number(draft.potential) || 0,
         historyTimeline: draft.historyTimeline || "",
+        interactions: parseInteractions(draft.interactions),
         message: draft.message || "Mensagem consultiva ainda nao definida.",
       };
       setProspectList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("prospect", item) === editor.key ? next : item));
@@ -642,7 +660,7 @@ export default function Home() {
           nextContact: `${returnPeriod} - ${next.nextAction}`,
           history: `Lead qualificado a partir da prospeccao. Dor provavel: ${next.pain} Abordagem sugerida: ${next.message}`,
           historyTimeline: `22/07/2026 - Lead qualificado - Veio da prospeccao com status Qualificado - Dor: ${next.pain} - Proximo: ${next.nextAction}`,
-          lessonsLearned: "Registrar depois da primeira conversa quais argumentos funcionaram, quais objecoes apareceram e quem decide.",
+          interactions: parseInteractions(draft.interactions),
           person: "Jefferson",
           initials: next.company.slice(0, 2).toUpperCase(),
           color: "#00b9f2",
@@ -662,6 +680,7 @@ export default function Home() {
                 nextContact: `${returnPeriod} - ${next.nextAction}`,
                 history: `${deal.history} Atualizado pela prospeccao: lead marcado como Qualificado. Dor provavel: ${next.pain}`,
                 historyTimeline: `${deal.historyTimeline}\n22/07/2026 - Atualizacao pela prospeccao - Lead marcado como Qualificado - Dor: ${next.pain} - Proximo: ${next.nextAction}`,
+                interactions: deal.interactions || [],
                 due: returnPeriod,
               }
             : deal);
@@ -685,7 +704,7 @@ export default function Home() {
         nextContact: draft.nextContact || `Retornar em ${returnPeriod}`,
         history: draft.history || "Historico ainda nao registrado.",
         historyTimeline: draft.historyTimeline || "",
-        lessonsLearned: draft.lessonsLearned || "Licoes ainda nao registradas.",
+        interactions: parseInteractions(draft.interactions),
         person: draft.person || "Jefferson",
         initials: (draft.company || "NE").slice(0, 2).toUpperCase(),
         color: "#00b9f2",
@@ -1027,9 +1046,7 @@ function DealCard({ deal, onOpen, onEdit, onAddInteraction }: { deal: Deal; onOp
         <span className="stage-pill">{normalizeStage(deal.stage)}</span>
       </div>
       <div className="next-contact"><Clock3 size={13} /><span>{deal.nextContact}</span></div>
-      <div className="history-preview"><small>Historico</small><span>{deal.history}</span></div>
-      <div className="timeline-preview"><small>Ultimo desdobramento</small><span>{latestHistoryStep(deal.historyTimeline)}</span></div>
-      <div className="lesson-preview"><small>Licao aprendida</small><span>{deal.lessonsLearned}</span></div>
+      <div className="card-last-interaction"><small>Ultima interacao</small><span>{latestHistoryStep(deal.historyTimeline)}</span></div>
       <strong>{brl(deal.value)}</strong>
       <div className="deal-footer"><span><Clock3 size={13} /> {deal.due}</span><span className="person">{deal.person.slice(0, 1)}</span></div>
       <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(deal)}>Adicionar interacao</button><button onClick={() => onEdit(deal)}>Editar</button></div>
@@ -1116,45 +1133,76 @@ function SolutionsModule({ solutions, onOpen, onEdit, onNew }: { solutions: Solu
   );
 }
 
+function InteractionTimeline({ items }: { items: Interaction[] }) {
+  if (!items.length) return <p className="empty-history">Nenhuma interacao registrada ainda.</p>;
+
+  return (
+    <div className="history-timeline">
+      {items.map((item, index) => (
+        <article className="timeline-item" key={`${item.id}-${index}`}>
+          <div className="timeline-marker"><span>{index + 1}</span></div>
+          <div className="timeline-content">
+            <div className="timeline-meta"><strong>{item.date}</strong><span>{item.type}</span>{item.status && <em>{item.status}</em>}{item.temperature && <i>{item.temperature}</i>}</div>
+            <p className="timeline-detail">{item.detail}</p>
+            <div className="timeline-fields">
+              {item.pain && <div><small>Dor identificada</small><b>{item.pain}</b></div>}
+              {item.objection && <div><small>Objecao</small><b>{item.objection}</b></div>}
+              {item.solution && <div><small>Solucao/proposta</small><b>{item.solution}</b></div>}
+              {item.next && <div><small>Proximo passo</small><b>{item.next}</b></div>}
+              {item.returnDate && <div><small>Proximo retorno</small><b>{item.returnDate}</b></div>}
+            </div>
+            {(item.owner || item.link) && <footer>{item.owner && <span>Responsavel: {item.owner}</span>}{item.link && <a href={item.link} target="_blank" rel="noreferrer">Abrir link/anexo</a>}</footer>}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { editor: EditorState; draft: Draft; setDraft: React.Dispatch<React.SetStateAction<Draft>>; onClose: () => void; onEdit: () => void; onSubmit: (event: React.FormEvent) => void }) {
   const fields = editorFields[editor.kind];
   const isEditing = editor.mode === "edit";
   const title = editor.key === "__new__" ? `Novo ${entityLabels[editor.kind]}` : `Detalhes do ${entityLabels[editor.kind]}`;
   const isDeal = editor.kind === "deal";
   const isTrackable = isDeal || editor.kind === "prospect";
-  const [historyEntry, setHistoryEntry] = useState({ date: "", type: "Visita", detail: "", pain: "", objection: "", next: "", returnDate: "", status: "", owner: "Jefferson", link: "" });
-  const dealHistorySteps = isTrackable ? historySteps(draft.historyTimeline || "") : [];
+  const [historyEntry, setHistoryEntry] = useState({ date: "", type: "Visita", detail: "", pain: "", objection: "", solution: "", next: "", returnDate: "", status: "", temperature: draft.temperature || "Morno", owner: "Jefferson", link: "" });
+  const interactionItems = isTrackable ? timelineInteractions(draft.historyTimeline || "", draft.interactions) : [];
 
   function addHistoryStep() {
     if (!historyEntry.date && !historyEntry.detail && !historyEntry.pain && !historyEntry.objection && !historyEntry.next) return;
 
-    const entry = [
-      historyEntry.date || "Data nao informada",
-      historyEntry.type || "Contato",
-      historyEntry.detail || "Sem detalhe registrado",
-      historyEntry.pain ? `Dor: ${historyEntry.pain}` : "Dor nao mapeada",
-      historyEntry.objection ? `Objecao: ${historyEntry.objection}` : "Objecao nao informada",
-      historyEntry.next ? `Proximo passo: ${historyEntry.next}` : "Proximo passo nao definido",
-      historyEntry.returnDate ? `Retorno: ${historyEntry.returnDate}` : "Retorno a definir",
-      historyEntry.status ? `Status: ${historyEntry.status}` : "Status nao informado",
-      historyEntry.owner ? `Responsavel: ${historyEntry.owner}` : "Responsavel: Jefferson",
-      historyEntry.link ? `Link/anexo: ${historyEntry.link}` : "",
-    ].filter(Boolean).join(" - ");
+    const interaction: Interaction = {
+      id: `${Date.now()}`,
+      date: historyEntry.date || "Data nao informada",
+      type: historyEntry.type || "Contato",
+      detail: historyEntry.detail || "Sem resumo registrado",
+      pain: historyEntry.pain,
+      objection: historyEntry.objection,
+      solution: historyEntry.solution,
+      next: historyEntry.next,
+      returnDate: historyEntry.returnDate,
+      status: historyEntry.status || draft.stage || "Lead novo",
+      temperature: historyEntry.temperature || draft.temperature || "Morno",
+      owner: historyEntry.owner || "Jefferson",
+      link: historyEntry.link,
+    };
+    const entry = [interaction.date, interaction.type, interaction.detail, interaction.pain ? `Dor: ${interaction.pain}` : "", interaction.objection ? `Objecao: ${interaction.objection}` : "", interaction.solution ? `Solucao: ${interaction.solution}` : "", interaction.next ? `Proximo passo: ${interaction.next}` : "", interaction.returnDate ? `Retorno: ${interaction.returnDate}` : "", interaction.status ? `Status: ${interaction.status}` : ""].filter(Boolean).join(" - ");
 
     setDraft((current) => ({
       ...current,
       historyTimeline: [...historySteps(current.historyTimeline || ""), entry].join("\n"),
+      interactions: JSON.stringify([...(parseInteractions(current.interactions).length ? parseInteractions(current.interactions) : historySteps(current.historyTimeline || "").map(legacyInteraction)), interaction]),
       ...(editor.kind === "prospect" ? { lastInteraction: `${historyEntry.date || "Hoje"} - ${historyEntry.type || "Contato"}`, nextReturn: historyEntry.returnDate || current.nextReturn || "Definir retorno" } : {}),
-      ...(editor.kind === "deal" ? { nextContact: historyEntry.returnDate ? `${historyEntry.returnDate} - ${historyEntry.next || "Retornar ao cliente"}` : current.nextContact, due: historyEntry.returnDate || current.due } : {}),
+      ...(editor.kind === "deal" ? { stage: interaction.status || current.stage, temperature: interaction.temperature || current.temperature, bucket: returnPeriodByTemperature[interaction.temperature || "Morno"] || current.bucket, nextContact: historyEntry.returnDate ? `${historyEntry.returnDate} - ${historyEntry.next || "Retornar ao cliente"}` : current.nextContact, due: historyEntry.returnDate || current.due } : {}),
     }));
-    setHistoryEntry({ date: "", type: "Visita", detail: "", pain: "", objection: "", next: "", returnDate: "", status: "", owner: "Jefferson", link: "" });
+    setHistoryEntry({ date: "", type: "Visita", detail: "", pain: "", objection: "", solution: "", next: "", returnDate: "", status: "", temperature: draft.temperature || "Morno", owner: "Jefferson", link: "" });
   }
 
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
       <div className="modal record-modal" onMouseDown={(event) => event.stopPropagation()}>
         <div className="modal-head">
-          <div><span className="modal-icon"><BriefcaseBusiness size={20} /></span><div><h2>{title}</h2><p>{isDeal ? "Controle negociacao, continuidades, aprendizados e proximos passos." : isEditing ? "Edite os campos e salve as informacoes." : "Visualize a informacao cadastrada."}</p></div></div>
+          <div><span className="modal-icon"><BriefcaseBusiness size={20} /></span><div><h2>{title}</h2><p>{isTrackable ? "Acompanhe a evolucao da negociacao e os proximos passos." : isEditing ? "Edite os campos e salve as informacoes." : "Visualize a informacao cadastrada."}</p></div></div>
           <button onClick={onClose} aria-label="Fechar"><X size={20} /></button>
         </div>
 
@@ -1163,23 +1211,25 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
             {isTrackable && (
               <section className="history-builder featured-history-builder">
                 <div className="history-builder-head">
-                  <div><h3>{isDeal ? "Continuidades da negociacao" : "Historico do lead"}</h3><p>Registre uma visita, conversa, dor, objecao, decisao ou proximo passo sem burocracia.</p></div>
-                  <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
+                  <div><h3>{isDeal ? "Evolucao da negociacao" : "Historico do lead"}</h3><p>Registre uma nova visita ou contato comercial sem burocracia.</p></div>
+                  <span>{interactionItems.length} interacao{interactionItems.length === 1 ? "" : "es"}</span>
                 </div>
 
                 <div className="history-entry-grid">
                   <label>Data<input placeholder="Ex.: 22/07/2026" value={historyEntry.date} onChange={(event) => setHistoryEntry((current) => ({ ...current, date: event.target.value }))} /></label>
-                  <label>Tipo<select value={historyEntry.type} onChange={(event) => setHistoryEntry((current) => ({ ...current, type: event.target.value }))}><option>Visita</option><option>Ligacao</option><option>WhatsApp</option><option>Reuniao</option><option>Proposta</option><option>Follow-up</option><option>Aprendizado</option></select></label>
+                  <label>Tipo de interacao<select value={historyEntry.type} onChange={(event) => setHistoryEntry((current) => ({ ...current, type: event.target.value }))}><option>Visita</option><option>WhatsApp</option><option>Ligacao</option><option>Reuniao</option><option>Proposta</option><option>Follow-up</option><option>Fechamento</option><option>Perda</option></select></label>
                   <label className="wide-field">O que aconteceu<textarea placeholder="Resumo da conversa, visita, percepcao ou decisao do cliente" value={historyEntry.detail} onChange={(event) => setHistoryEntry((current) => ({ ...current, detail: event.target.value }))} /></label>
                   <label>Dor identificada<input placeholder="Ex.: perde retornos no WhatsApp" value={historyEntry.pain} onChange={(event) => setHistoryEntry((current) => ({ ...current, pain: event.target.value }))} /></label>
                   <label>Objecao / risco<input placeholder="Ex.: achou caro, precisa falar com socio..." value={historyEntry.objection} onChange={(event) => setHistoryEntry((current) => ({ ...current, objection: event.target.value }))} /></label>
+                  <label>Soluçao/proposta apresentada<input placeholder="Ex.: painel simples de agenda e retornos" value={historyEntry.solution} onChange={(event) => setHistoryEntry((current) => ({ ...current, solution: event.target.value }))} /></label>
                   <label>Proximo passo<input placeholder="Ex.: retornar sexta com exemplo visual" value={historyEntry.next} onChange={(event) => setHistoryEntry((current) => ({ ...current, next: event.target.value }))} /></label>
                   <label>Data prevista para retorno<input placeholder="Ex.: 29/07/2026" value={historyEntry.returnDate} onChange={(event) => setHistoryEntry((current) => ({ ...current, returnDate: event.target.value }))} /></label>
-                  <label>Status da negociacao<select value={historyEntry.status} onChange={(event) => setHistoryEntry((current) => ({ ...current, status: event.target.value }))}><option value="">Selecionar status</option>{stages.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
+                  <label>Nova etapa do funil<select value={historyEntry.status} onChange={(event) => setHistoryEntry((current) => ({ ...current, status: event.target.value }))}><option value="">Manter etapa atual</option>{stages.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
+                  <label>Temperatura<select value={historyEntry.temperature} onChange={(event) => setHistoryEntry((current) => ({ ...current, temperature: event.target.value }))}>{salesTemperatures.map((temperature) => <option key={temperature}>{temperature}</option>)}</select></label>
                   <label>Responsavel<input value={historyEntry.owner} onChange={(event) => setHistoryEntry((current) => ({ ...current, owner: event.target.value }))} /></label>
                   <label className="wide-field">Anexo ou link<input placeholder="Cole um link de proposta, reunião ou arquivo" value={historyEntry.link} onChange={(event) => setHistoryEntry((current) => ({ ...current, link: event.target.value }))} /></label>
                 </div>
-                <button type="button" className="add-history-step" onClick={addHistoryStep}>+ Adicionar continuidade</button>
+                <button type="button" className="add-history-step" onClick={addHistoryStep}>+ Adicionar interacao</button>
               </section>
             )}
             <div className="editor-grid">
@@ -1198,18 +1248,18 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                 </label>
               ))}
             </div>
-            {isDeal && (
+            {false && isDeal && (
               <section className="history-builder">
                 <div className="history-builder-head">
                   <div><h3>Desdobramentos da negociacao</h3><p>Adicione quantas visitas, conversas, objeções, decisões e proximos passos forem necessarios.</p></div>
-                  <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
+                  <span>{interactionItems.length} interacao{interactionItems.length === 1 ? "" : "es"}</span>
                 </div>
 
                 <div className="history-step-list">
-                  {dealHistorySteps.length ? dealHistorySteps.map((step, index) => (
-                    <article className="history-step-item" key={`${step}-${index}`}>
+                  {interactionItems.length ? interactionItems.map((step, index) => (
+                    <article className="history-step-item" key={`${step.id}-${index}`}>
                       <small>#{index + 1}</small>
-                      <p>{step}</p>
+                      <p>{step.detail}</p>
                     </article>
                   )) : <p className="empty-history">Nenhum desdobramento registrado ainda.</p>}
                 </div>
@@ -1237,17 +1287,10 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
             {isTrackable && (
               <section className="history-builder record-history-view">
                 <div className="history-builder-head">
-                  <div><h3>{isDeal ? "Desdobramentos da negociacao" : "Historico do lead"}</h3><p>Linha do tempo completa desse cliente.</p></div>
-                  <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
+                  <div><h3>{isDeal ? "Historico da negociacao" : "Historico do lead"}</h3><p>Evolucao completa da oportunidade, do primeiro contato ao momento atual.</p></div>
+                  <span>{interactionItems.length} interacao{interactionItems.length === 1 ? "" : "es"}</span>
                 </div>
-                <div className="history-step-list">
-                  {dealHistorySteps.length ? dealHistorySteps.map((step, index) => (
-                    <article className="history-step-item" key={`${step}-${index}`}>
-                      <small>#{index + 1}</small>
-                      <p>{step}</p>
-                    </article>
-                  )) : <p className="empty-history">Nenhum desdobramento registrado ainda.</p>}
-                </div>
+                <InteractionTimeline items={interactionItems} />
               </section>
             )}
             <div className="modal-actions"><button type="button" className="cancel" onClick={onClose}>Fechar</button><button className="primary" type="button" onClick={onEdit}>Editar informacoes</button></div>
