@@ -44,6 +44,21 @@ type Deal = {
   tag: string;
   historyTimeline: string;
   lessonsLearned: string;
+  interactions?: Interaction[];
+};
+
+type Interaction = {
+  id: string;
+  date: string;
+  type: string;
+  detail: string;
+  pain?: string;
+  objection?: string;
+  next?: string;
+  returnDate?: string;
+  status?: string;
+  owner?: string;
+  link?: string;
 };
 
 type Company = {
@@ -98,6 +113,11 @@ type Prospect = {
   channel: string;
   nextAction: string;
   message: string;
+  historyTimeline?: string;
+  lastInteraction?: string;
+  nextReturn?: string;
+  potential?: number;
+  interactions?: Interaction[];
 };
 
 type EntityKind = "prospect" | "deal" | "contact" | "company" | "task" | "solution";
@@ -105,7 +125,14 @@ type EditorState = { kind: EntityKind; key: string; mode: "view" | "edit" };
 type Draft = Record<string, string>;
 type EditorField = { name: string; label: string; type?: "text" | "number" | "select" | "textarea"; options?: string[] };
 
-const stages = ["Novos leads", "Diagnostico", "Proposta", "Negociacao"];
+const stages = ["Lead novo", "Primeiro contato", "Diagnostico realizado", "Proposta enviada", "Em negociacao", "Fechado", "Perdido", "Pos-venda / relacionamento"];
+const stageAliases: Record<string, string> = {
+  "Novos leads": "Lead novo",
+  Diagnostico: "Diagnostico realizado",
+  Proposta: "Proposta enviada",
+  Negociacao: "Em negociacao",
+};
+const normalizeStage = (stage: string) => stageAliases[stage] || stage;
 const salesTemperatures = ["Super quente", "Quente", "Morno", "Frio", "Bolsao"];
 const returnPeriodByTemperature: Record<string, string> = {
   "Super quente": "Hoje",
@@ -368,6 +395,9 @@ const editorFields: Record<EntityKind, EditorField[]> = {
     { name: "temperature", label: "Temperatura", type: "select", options: salesTemperatures },
     { name: "channel", label: "Canal", type: "select", options: ["WhatsApp", "E-mail", "Ligacao", "LinkedIn"] },
     { name: "nextAction", label: "Proxima acao" },
+    { name: "lastInteraction", label: "Ultima interacao" },
+    { name: "nextReturn", label: "Proximo retorno" },
+    { name: "potential", label: "Potencial estimado", type: "number" },
     { name: "message", label: "Mensagem sugerida", type: "textarea" },
   ],
   deal: [
@@ -418,8 +448,8 @@ const editorFields: Record<EntityKind, EditorField[]> = {
 };
 
 const emptyDrafts: Record<EntityKind, Draft> = {
-  prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Morno", channel: "WhatsApp", nextAction: "", message: "" },
-  deal: { company: "", title: "", value: "0", stage: "Novos leads", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "", lessonsLearned: "" },
+  prospect: { company: "", segment: "", size: "", whatsapp: "", site: "", contactHint: "", ease: "", source: "", pain: "", status: "Pesquisa", temperature: "Morno", channel: "WhatsApp", nextAction: "", lastInteraction: "Ainda nao registrado", nextReturn: "Definir retorno", potential: "0", message: "" },
+  deal: { company: "", title: "", value: "0", stage: "Lead novo", temperature: "Morno", bucket: "7 dias", nextContact: "Definir novo contato", person: "Jefferson", due: "Novo", tag: "Solucao", history: "", historyTimeline: "", lessonsLearned: "" },
   contact: { name: "", company: "", role: "", phone: "", email: "", status: "Novo", next: "" },
   company: { name: "", segment: "", size: "", pain: "", fit: "Alto", owner: "Jefferson", value: "0" },
   task: { time: "", title: "", company: "", type: "", priority: "Media" },
@@ -447,7 +477,7 @@ export default function Home() {
   const [modal, setModal] = useState(false);
   const [menu, setMenu] = useState(false);
   const [toast, setToast] = useState("");
-  const [form, setForm] = useState({ company: "", title: "", value: "", stage: "Novos leads" });
+  const [form, setForm] = useState({ company: "", title: "", value: "", stage: "Lead novo" });
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [draft, setDraft] = useState<Draft>({});
 
@@ -519,7 +549,7 @@ export default function Home() {
         tag: "Solucao",
       },
     ]);
-    setForm({ company: "", title: "", value: "", stage: "Novos leads" });
+    setForm({ company: "", title: "", value: "", stage: "Lead novo" });
     setModal(false);
     setToast("Oportunidade criada com sucesso");
     setTimeout(() => setToast(""), 2800);
@@ -537,7 +567,12 @@ export default function Home() {
   function draftFrom(kind: EntityKind, item: Deal | Prospect | Contact | Company | Task | Solution): Draft {
     if (kind === "deal") {
       const deal = item as Deal;
-      return { company: deal.company, title: deal.title, value: String(deal.value), stage: deal.stage, temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history, historyTimeline: deal.historyTimeline, lessonsLearned: deal.lessonsLearned };
+      return { company: deal.company, title: deal.title, value: String(deal.value), stage: normalizeStage(deal.stage), temperature: deal.temperature, bucket: deal.bucket, nextContact: deal.nextContact, person: deal.person, due: deal.due, tag: deal.tag, history: deal.history, historyTimeline: deal.historyTimeline, lessonsLearned: deal.lessonsLearned };
+    }
+
+    if (kind === "prospect") {
+      const prospect = item as Prospect;
+      return { company: prospect.company, segment: prospect.segment, size: prospect.size, whatsapp: prospect.whatsapp, site: prospect.site, contactHint: prospect.contactHint, ease: prospect.ease, source: prospect.source, pain: prospect.pain, status: prospect.status, temperature: prospect.temperature, channel: prospect.channel, nextAction: prospect.nextAction, lastInteraction: prospect.lastInteraction || "Pesquisa inicial", nextReturn: prospect.nextReturn || "Definir retorno", potential: String(prospect.potential || 0), historyTimeline: prospect.historyTimeline || "", message: prospect.message };
     }
 
     if (kind === "company") {
@@ -586,6 +621,10 @@ export default function Home() {
         temperature: selectedTemperature,
         channel: draft.channel || "WhatsApp",
         nextAction: draft.nextAction || "Definir proxima acao",
+        lastInteraction: draft.lastInteraction || "Ainda nao registrado",
+        nextReturn: draft.nextReturn || "Definir retorno",
+        potential: Number(draft.potential) || 0,
+        historyTimeline: draft.historyTimeline || "",
         message: draft.message || "Mensagem consultiva ainda nao definida.",
       };
       setProspectList((prev) => isNew ? [next, ...prev] : prev.map((item) => keyFor("prospect", item) === editor.key ? next : item));
@@ -597,7 +636,7 @@ export default function Home() {
           company: next.company,
           title: `Diagnostico Sykron - ${next.segment}`,
           value: 1800,
-          stage: "Novos leads",
+          stage: "Lead novo",
           temperature: selectedTemperature,
           bucket: returnPeriod,
           nextContact: `${returnPeriod} - ${next.nextAction}`,
@@ -640,7 +679,7 @@ export default function Home() {
         company: draft.company || "Nova empresa",
         title: draft.title || "Nova oportunidade",
         value: Number(draft.value) || 0,
-        stage: draft.stage || "Novos leads",
+        stage: normalizeStage(draft.stage || "Lead novo"),
         temperature: selectedTemperature,
         bucket: returnPeriod,
         nextContact: draft.nextContact || `Retornar em ${returnPeriod}`,
@@ -770,11 +809,11 @@ export default function Home() {
           )}
 
           {active === "Prospeccao" && (
-            <ProspectionModule prospects={filteredProspects} onOpen={(prospect) => openRecord("prospect", prospect)} onEdit={(prospect) => openRecord("prospect", prospect, "edit")} onNew={() => newRecord("prospect")} />
+            <ProspectionModule prospects={filteredProspects} onOpen={(prospect) => openRecord("prospect", prospect)} onEdit={(prospect) => openRecord("prospect", prospect, "edit")} onAddInteraction={(prospect) => openRecord("prospect", prospect, "edit")} onNew={() => newRecord("prospect")} />
           )}
 
           {active === "Funil de vendas" && (
-            <PipelineModule deals={filteredDeals} setForm={setForm} setModal={setModal} onOpen={(deal) => openRecord("deal", deal)} onEdit={(deal) => openRecord("deal", deal, "edit")} />
+            <PipelineModule deals={filteredDeals} setForm={setForm} setModal={setModal} onOpen={(deal) => openRecord("deal", deal)} onEdit={(deal) => openRecord("deal", deal, "edit")} onAddInteraction={(deal) => openRecord("deal", deal, "edit")} />
           )}
 
           {active === "Contatos" && (
@@ -832,13 +871,24 @@ export default function Home() {
 }
 
 function Overview({ deals, total, prospectCount, contactCount, companyCount, solutionCount, setActive, setModal }: { deals: Deal[]; total: number; prospectCount: number; contactCount: number; companyCount: number; solutionCount: number; setActive: (view: string) => void; setModal: (open: boolean) => void }) {
+  const hotDeals = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
+  const proposalDeals = deals.filter((deal) => normalizeStage(deal.stage) === "Proposta enviada").length;
+  const openDeals = deals.filter((deal) => !["Fechado", "Perdido"].includes(normalizeStage(deal.stage))).length;
+  const closedDeals = deals.filter((deal) => normalizeStage(deal.stage) === "Fechado").length;
+  const overdueDeals = deals.filter((deal) => /atrasad/i.test(`${deal.due} ${deal.nextContact}`)).length;
+  const upcomingVisits = deals.filter((deal) => ["Hoje", "3 dias"].includes(deal.bucket)).length;
+
   return (
     <>
       <section className="metrics">
-        <Metric icon={CircleDollarSign} label="Pipeline total" value={brl(total)} note="12,5% este mes" up color="cyan" />
-        <Metric icon={Target} label="Oportunidades" value={String(deals.length)} note="Base demonstrativa" color="blue" />
-        <Metric icon={Users} label="Leads em prospeccao" value={String(prospectCount)} note="Lista qualificada" color="green" />
-        <Metric icon={TrendingUp} label="Taxa de conversao" value="31,8%" note="Meta: 40%" up color="orange" />
+        <Metric icon={Users} label="Total de leads" value={String(prospectCount)} note="Base de prospeccao" color="green" />
+        <Metric icon={TrendingUp} label="Leads quentes" value={String(hotDeals)} note="Quente ou super quente" up color="orange" />
+        <Metric icon={Target} label="Propostas enviadas" value={String(proposalDeals)} note="Aguardando decisao" color="blue" />
+        <Metric icon={CircleDollarSign} label="Negociacoes abertas" value={String(openDeals)} note={brl(total)} color="cyan" />
+        <Metric icon={CircleDollarSign} label="Fechamentos do mes" value={String(closedDeals)} note="Negocios ganhos" up color="green" />
+        <Metric icon={Clock3} label="Follow-ups atrasados" value={String(overdueDeals)} note="Prioridade de hoje" color="orange" />
+        <Metric icon={CalendarDays} label="Proximas visitas" value={String(upcomingVisits)} note="Hoje ou em 3 dias" color="blue" />
+        <Metric icon={CircleDollarSign} label="Valor potencial" value={brl(total)} note="Pipeline em andamento" up color="cyan" />
       </section>
 
       <section className="module-grid">
@@ -866,7 +916,7 @@ function Overview({ deals, total, prospectCount, contactCount, companyCount, sol
   );
 }
 
-function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Prospect[]; onOpen: (prospect: Prospect) => void; onEdit: (prospect: Prospect) => void; onNew: () => void }) {
+function ProspectionModule({ prospects, onOpen, onEdit, onAddInteraction, onNew }: { prospects: Prospect[]; onOpen: (prospect: Prospect) => void; onEdit: (prospect: Prospect) => void; onAddInteraction: (prospect: Prospect) => void; onNew: () => void }) {
   const hotLeads = prospects.filter((prospect) => prospect.temperature === "Super quente" || prospect.temperature === "Quente").length;
 
   return (
@@ -895,8 +945,9 @@ function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Pr
                 </div>
                 <div className="ease-box"><small>Por que e mais facil</small><b>{prospect.ease}</b><span>{prospect.contactHint}</span></div>
                 <div className="pain-box"><small>Dor provavel</small><b>{prospect.pain}</b></div>
+                <div className="prospect-followup"><span><small>Ultima interacao</small>{prospect.lastInteraction || "Pesquisa inicial"}</span><span><small>Proximo retorno</small>{prospect.nextReturn || `Em ${returnPeriodByTemperature[prospect.temperature] || "7 dias"}`}</span><strong>{prospect.potential ? brl(prospect.potential) : brl(prospect.temperature === "Super quente" ? 2800 : prospect.temperature === "Quente" ? 2200 : 1800)}</strong></div>
                 <footer><span>{prospect.source}</span><strong>{prospect.nextAction}</strong></footer>
-                <div className="record-actions"><button onClick={() => onOpen(prospect)}>Abrir</button><button onClick={() => onEdit(prospect)}>Editar</button></div>
+                <div className="record-actions"><button onClick={() => onOpen(prospect)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(prospect)}>Registrar interacao</button><button onClick={() => onEdit(prospect)}>Editar</button></div>
               </article>
             ))}
           </div>
@@ -920,7 +971,7 @@ function ProspectionModule({ prospects, onOpen, onEdit, onNew }: { prospects: Pr
   );
 }
 
-function PipelineModule({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
+function PipelineModule({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void }) {
   const hotDeals = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
   const activeFollowUps = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
 
@@ -940,21 +991,21 @@ function PipelineModule({ deals, setForm, setModal, onOpen, onEdit }: { deals: D
           );
         })}
       </div>
-      <Kanban deals={deals} setForm={setForm} setModal={setModal} onOpen={onOpen} onEdit={onEdit} />
+      <Kanban deals={deals} setForm={setForm} setModal={setModal} onOpen={onOpen} onEdit={onEdit} onAddInteraction={onAddInteraction} />
     </section>
   );
 }
 
-function Kanban({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
+function Kanban({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void }) {
   return (
     <div className="kanban">
       {stages.map((stage, index) => {
-        const stageDeals = deals.filter((deal) => deal.stage === stage);
+        const stageDeals = deals.filter((deal) => normalizeStage(deal.stage) === stage);
         return (
           <div className="column" key={stage}>
             <div className="column-head"><span className={`stage-dot s${index}`} /><b>{stage}</b><em>{stageDeals.length}</em><small>{brl(stageDeals.reduce((sum, deal) => sum + deal.value, 0))}</small></div>
             <div className="cards">
-              {stageDeals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} onEdit={onEdit} />)}
+              {stageDeals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} onEdit={onEdit} onAddInteraction={onAddInteraction} />)}
               <button className="add-card" onClick={() => { setForm((form) => ({ ...form, stage })); setModal(true); }}><Plus size={15} /> Adicionar oportunidade</button>
             </div>
           </div>
@@ -964,7 +1015,7 @@ function Kanban({ deals, setForm, setModal, onOpen, onEdit }: { deals: Deal[]; s
   );
 }
 
-function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void }) {
+function DealCard({ deal, onOpen, onEdit, onAddInteraction }: { deal: Deal; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void }) {
   return (
     <article className="deal-card">
       <div className="deal-top"><div className="company-avatar" style={{ background: deal.color }}>{deal.initials}</div><span className="tag">{deal.tag}</span><button aria-label="Mais opcoes"><MoreHorizontal size={17} /></button></div>
@@ -973,6 +1024,7 @@ function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) =
       <div className="deal-signals">
         <span className={`temperature-pill ${temperatureClass(deal.temperature)}`}>{deal.temperature}</span>
         <span className="bucket-pill">Retorno: {deal.bucket}</span>
+        <span className="stage-pill">{normalizeStage(deal.stage)}</span>
       </div>
       <div className="next-contact"><Clock3 size={13} /><span>{deal.nextContact}</span></div>
       <div className="history-preview"><small>Historico</small><span>{deal.history}</span></div>
@@ -980,7 +1032,7 @@ function DealCard({ deal, onOpen, onEdit }: { deal: Deal; onOpen: (deal: Deal) =
       <div className="lesson-preview"><small>Licao aprendida</small><span>{deal.lessonsLearned}</span></div>
       <strong>{brl(deal.value)}</strong>
       <div className="deal-footer"><span><Clock3 size={13} /> {deal.due}</span><span className="person">{deal.person.slice(0, 1)}</span></div>
-      <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir</button><button onClick={() => onEdit(deal)}>Editar</button></div>
+      <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(deal)}>Adicionar interacao</button><button onClick={() => onEdit(deal)}>Editar</button></div>
     </article>
   );
 }
@@ -1069,25 +1121,33 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
   const isEditing = editor.mode === "edit";
   const title = editor.key === "__new__" ? `Novo ${entityLabels[editor.kind]}` : `Detalhes do ${entityLabels[editor.kind]}`;
   const isDeal = editor.kind === "deal";
-  const [historyEntry, setHistoryEntry] = useState({ date: "", type: "Visita", detail: "", objection: "", next: "" });
-  const dealHistorySteps = isDeal ? historySteps(draft.historyTimeline || "") : [];
+  const isTrackable = isDeal || editor.kind === "prospect";
+  const [historyEntry, setHistoryEntry] = useState({ date: "", type: "Visita", detail: "", pain: "", objection: "", next: "", returnDate: "", status: "", owner: "Jefferson", link: "" });
+  const dealHistorySteps = isTrackable ? historySteps(draft.historyTimeline || "") : [];
 
   function addHistoryStep() {
-    if (!historyEntry.date && !historyEntry.detail && !historyEntry.objection && !historyEntry.next) return;
+    if (!historyEntry.date && !historyEntry.detail && !historyEntry.pain && !historyEntry.objection && !historyEntry.next) return;
 
     const entry = [
       historyEntry.date || "Data nao informada",
       historyEntry.type || "Contato",
       historyEntry.detail || "Sem detalhe registrado",
-      historyEntry.objection || "Objecao nao informada",
-      historyEntry.next || "Proximo passo nao definido",
-    ].join(" - ");
+      historyEntry.pain ? `Dor: ${historyEntry.pain}` : "Dor nao mapeada",
+      historyEntry.objection ? `Objecao: ${historyEntry.objection}` : "Objecao nao informada",
+      historyEntry.next ? `Proximo passo: ${historyEntry.next}` : "Proximo passo nao definido",
+      historyEntry.returnDate ? `Retorno: ${historyEntry.returnDate}` : "Retorno a definir",
+      historyEntry.status ? `Status: ${historyEntry.status}` : "Status nao informado",
+      historyEntry.owner ? `Responsavel: ${historyEntry.owner}` : "Responsavel: Jefferson",
+      historyEntry.link ? `Link/anexo: ${historyEntry.link}` : "",
+    ].filter(Boolean).join(" - ");
 
     setDraft((current) => ({
       ...current,
       historyTimeline: [...historySteps(current.historyTimeline || ""), entry].join("\n"),
+      ...(editor.kind === "prospect" ? { lastInteraction: `${historyEntry.date || "Hoje"} - ${historyEntry.type || "Contato"}`, nextReturn: historyEntry.returnDate || current.nextReturn || "Definir retorno" } : {}),
+      ...(editor.kind === "deal" ? { nextContact: historyEntry.returnDate ? `${historyEntry.returnDate} - ${historyEntry.next || "Retornar ao cliente"}` : current.nextContact, due: historyEntry.returnDate || current.due } : {}),
     }));
-    setHistoryEntry({ date: "", type: "Visita", detail: "", objection: "", next: "" });
+    setHistoryEntry({ date: "", type: "Visita", detail: "", pain: "", objection: "", next: "", returnDate: "", status: "", owner: "Jefferson", link: "" });
   }
 
   return (
@@ -1100,10 +1160,10 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
 
         {isEditing ? (
           <form onSubmit={onSubmit}>
-            {isDeal && (
+            {isTrackable && (
               <section className="history-builder featured-history-builder">
                 <div className="history-builder-head">
-                  <div><h3>Continuidades da negociacao</h3><p>Use este bloco para adicionar uma nova visita, conversa, objecao, decisao ou proximo passo do cliente.</p></div>
+                  <div><h3>{isDeal ? "Continuidades da negociacao" : "Historico do lead"}</h3><p>Registre uma visita, conversa, dor, objecao, decisao ou proximo passo sem burocracia.</p></div>
                   <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
                 </div>
 
@@ -1111,8 +1171,13 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                   <label>Data<input placeholder="Ex.: 22/07/2026" value={historyEntry.date} onChange={(event) => setHistoryEntry((current) => ({ ...current, date: event.target.value }))} /></label>
                   <label>Tipo<select value={historyEntry.type} onChange={(event) => setHistoryEntry((current) => ({ ...current, type: event.target.value }))}><option>Visita</option><option>Ligacao</option><option>WhatsApp</option><option>Reuniao</option><option>Proposta</option><option>Follow-up</option><option>Aprendizado</option></select></label>
                   <label className="wide-field">O que aconteceu<textarea placeholder="Resumo da conversa, visita, percepcao ou decisao do cliente" value={historyEntry.detail} onChange={(event) => setHistoryEntry((current) => ({ ...current, detail: event.target.value }))} /></label>
+                  <label>Dor identificada<input placeholder="Ex.: perde retornos no WhatsApp" value={historyEntry.pain} onChange={(event) => setHistoryEntry((current) => ({ ...current, pain: event.target.value }))} /></label>
                   <label>Objecao / risco<input placeholder="Ex.: achou caro, precisa falar com socio..." value={historyEntry.objection} onChange={(event) => setHistoryEntry((current) => ({ ...current, objection: event.target.value }))} /></label>
                   <label>Proximo passo<input placeholder="Ex.: retornar sexta com exemplo visual" value={historyEntry.next} onChange={(event) => setHistoryEntry((current) => ({ ...current, next: event.target.value }))} /></label>
+                  <label>Data prevista para retorno<input placeholder="Ex.: 29/07/2026" value={historyEntry.returnDate} onChange={(event) => setHistoryEntry((current) => ({ ...current, returnDate: event.target.value }))} /></label>
+                  <label>Status da negociacao<select value={historyEntry.status} onChange={(event) => setHistoryEntry((current) => ({ ...current, status: event.target.value }))}><option value="">Selecionar status</option>{stages.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
+                  <label>Responsavel<input value={historyEntry.owner} onChange={(event) => setHistoryEntry((current) => ({ ...current, owner: event.target.value }))} /></label>
+                  <label className="wide-field">Anexo ou link<input placeholder="Cole um link de proposta, reunião ou arquivo" value={historyEntry.link} onChange={(event) => setHistoryEntry((current) => ({ ...current, link: event.target.value }))} /></label>
                 </div>
                 <button type="button" className="add-history-step" onClick={addHistoryStep}>+ Adicionar continuidade</button>
               </section>
@@ -1169,10 +1234,10 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                 <b>{draft[field.name] || "Nao informado"}</b>
               </div>
             ))}
-            {isDeal && (
+            {isTrackable && (
               <section className="history-builder record-history-view">
                 <div className="history-builder-head">
-                  <div><h3>Desdobramentos da negociacao</h3><p>Linha do tempo completa desse cliente.</p></div>
+                  <div><h3>{isDeal ? "Desdobramentos da negociacao" : "Historico do lead"}</h3><p>Linha do tempo completa desse cliente.</p></div>
                   <span>{dealHistorySteps.length} registro{dealHistorySteps.length === 1 ? "" : "s"}</span>
                 </div>
                 <div className="history-step-list">
