@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "../lib/supabase/client";
-import { loadCloudCrm, saveCloudDeal, saveCloudInteractions, saveCloudProspect, deleteCloudDeal, deleteCloudProspect, type CloudDeal, type CloudInteraction, type CloudProspect } from "../lib/supabase/crm";
+import { loadCloudCrm, saveCloudDeal, saveCloudInteractions, saveCloudProspect, type CloudDeal, type CloudInteraction, type CloudProspect } from "../lib/supabase/crm";
 import {
   Bell,
   Bot,
@@ -146,9 +146,14 @@ const returnPeriodByTemperature: Record<string, string> = {
   Bolsao: "30 dias",
 };
 
-// Negociacoes fictícias de exemplo removidas (2026-07-26) — o funil agora comeca vazio para
-// contas novas; nao ha mais seed automatico de dados de demonstracao.
-const initialDeals: Deal[] = [];
+const initialDeals: Deal[] = [
+  { id: 1, company: "Isabela Rocha Estetica", title: "Controle simples de agenda e retornos", value: 1800, stage: "Novos leads", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - enviar primeira mensagem", history: "Lead facil. WhatsApp publico. Primeira abordagem deve focar em agenda, retornos e controle de avaliacoes.", person: "Jefferson", initials: "IR", color: "#00b9f2", due: "Hoje", tag: "Agenda", historyTimeline: "22/07/2026 - Pesquisa inicial - WhatsApp publico identificado - Objecao ainda nao mapeada - Proximo: enviar abordagem curta.\n22/07/2026 - Hipotese de dor - Agenda e retornos podem estar soltos no WhatsApp - Proximo: oferecer diagnostico simples." },
+  { id: 2, company: "Caninos Pet Shop", title: "Mini CRM de banho, tosa e pacotes", value: 2400, stage: "Diagnostico", temperature: "Quente", bucket: "3 dias", nextContact: "Em 3 dias - confirmar interesse", history: "Negocio recorrente com banho, tosa, hotel e taxi dog. Proposta inicial: planilha/CRM simples de clientes recorrentes.", person: "Jefferson", initials: "CP", color: "#e9784d", due: "3 dias", tag: "Follow-up", historyTimeline: "22/07/2026 - Diagnostico preliminar - Servicos recorrentes identificados - Objecao provavel: medo de ferramenta complicada - Proximo: mostrar modelo visual simples.\n22/07/2026 - Ideia de oferta - Controle de pacotes, agenda e lembretes - Proximo: validar rotina atual." },
+  { id: 3, company: "Fino Faro Pet Shop", title: "Controle de delivery e recompra", value: 2200, stage: "Diagnostico", temperature: "Morno", bucket: "7 dias", nextContact: "Em 7 dias - enviar exemplo visual", history: "Tem delivery e WhatsApp. Dor provavel: pedidos, agendamentos e recompra de produtos sem acompanhamento.", person: "Jefferson", initials: "FF", color: "#198f78", due: "7 dias", tag: "Automacao", historyTimeline: "22/07/2026 - Pesquisa inicial - Delivery e atendimento por WhatsApp identificados - Proximo: abordar com controle de pedidos e recompra.\n22/07/2026 - Aprendizado da conta - Oferta deve ser pequena e operacional - Proximo: perguntar como controlam pedidos hoje." },
+  { id: 4, company: "CampoClin", title: "Indicadores de agenda e conversao", value: 3500, stage: "Proposta", temperature: "Frio", bucket: "15 dias", nextContact: "Em 15 dias - retomar com diagnostico", history: "Clinica com varias especialidades e agenda por WhatsApp. Pode exigir decisao mais formal, mas a dor e clara.", person: "Jefferson", initials: "CC", color: "#bd6db5", due: "15 dias", tag: "Indicadores", historyTimeline: "22/07/2026 - Pesquisa inicial - Varias especialidades e agenda por WhatsApp - Objecao provavel: decisao mais formal - Proximo: identificar gestor responsavel.\n22/07/2026 - Possivel proposta - Indicadores de agenda, conversao e salas - Proximo: abordagem consultiva sem pressao." },
+  { id: 5, company: "Vet Center Sorocaba", title: "Controle de retornos e servicos recorrentes", value: 3200, stage: "Proposta", temperature: "Bolsao", bucket: "30 dias", nextContact: "Em 30 dias - nutrir com caso de uso", history: "Clinica veterinaria 24h com muitos pontos de contato. Comecar pequeno: lembretes e retornos.", person: "Jefferson", initials: "VC", color: "#d59823", due: "30 dias", tag: "Retencao", historyTimeline: "22/07/2026 - Pesquisa inicial - Atendimento 24h e servicos recorrentes - Proximo: nutrir com exemplo de lembretes.\n22/07/2026 - Hipotese de dor - Retornos, vacinas, banho e exames podem precisar de controle - Proximo: aguardar momento melhor." },
+  { id: 6, company: "L.A English Idiomas & Musica", title: "Funil de aulas demonstrativas", value: 2100, stage: "Negociacao", temperature: "Super quente", bucket: "Hoje", nextContact: "Hoje - pedir responsavel comercial", history: "Escola local com aula demonstrativa. Boa entrada para organizar interessados, follow-up e rematriculas.", person: "Jefferson", initials: "LA", color: "#3c7dd9", due: "Hoje", tag: "Funil", historyTimeline: "22/07/2026 - Pesquisa inicial - Aula demonstrativa e varios cursos - Proximo: pedir responsavel comercial.\n22/07/2026 - Oferta sugerida - Funil de interessados, follow-up e rematriculas - Proximo: enviar exemplo de controle." },
+];
 
 const companies: Company[] = [
   { name: "Clinica Aurora", segment: "Saude", size: "35 colaboradores", pain: "Indicadores dispersos e baixa visibilidade da agenda", fit: "Alto", owner: "Marina", value: 8900 },
@@ -182,53 +187,181 @@ const solutions: Solution[] = [
 
 const prospects: Prospect[] = [
   {
-    company: "Metalúrgica Santa Rita",
-    segment: "Indústria Metalmecânica",
-    size: "65 colaboradores",
-    whatsapp: "(15) 3211-4500",
-    site: "https://santarita-sorocaba.com.br",
-    contactHint: "Abordar o gerente de produção ou qualidade sobre controle de não conformidades.",
-    ease: "Alto - Alinhado diretamente com sua experiência em Gestão da Qualidade e PCP.",
-    source: "Mapeamento regional Sorocaba",
-    pain: "Controle de retrabalho, indicadores de qualidade em planilhas isoladas e apontamentos manuais.",
-    status: "Qualificação",
+    company: "Isabela Rocha Estetica",
+    segment: "Clinica de estetica",
+    size: "Negocio local com agenda por WhatsApp",
+    whatsapp: "(15) 99672-2491",
+    site: "https://esteticasorocaba.com.br/contato/",
+    contactHint: "Chamar pelo WhatsApp pedindo para falar com responsavel pela agenda/atendimento.",
+    ease: "Muito facil - dor simples de explicar: agenda, retorno e no-show.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Agenda, retornos de avaliacao e acompanhamento de pacientes podem se perder no WhatsApp sem controle de follow-up.",
+    status: "1o contato",
     temperature: "Super quente",
-    channel: "Visita / WhatsApp",
-    nextAction: "Apresentar painel de indicadores e checklist de processos",
-    message: "Olá! Sou do time da Sykron em Sorocaba. Especialistas em estruturar dashboards de qualidade e produtividade para o setor industrial. Podemos agendar 15 minutos para mostrar como eliminamos planilhas manuais na gestão de processos?",
+    channel: "WhatsApp",
+    nextAction: "Oferecer diagnostico gratuito de agenda e retornos",
+    message: "Oi, tudo bem? Vi que voces trabalham com agendamentos e avaliacoes por WhatsApp. Eu sou da Sykron, aqui de Sorocaba, e ajudo pequenos negocios a organizar agenda, retornos e follow-ups sem complicar. Posso te mandar uma ideia simples de melhoria para reduzir esquecimentos e aumentar retorno de clientes?",
   },
   {
-    company: "Hospital Veterinário Sorocaba",
-    segment: "Saúde Animal 24h",
-    size: "45 colaboradores",
-    whatsapp: "(15) 3232-8900",
-    site: "https://hvs-sorocaba.com.br",
-    contactHint: "Falar com a gerência administrativa sobre controle de agendamentos e retornos.",
-    ease: "Médio - Alta demanda por automação de lembretes e controle de caixa.",
-    source: "Prospecção ativa",
-    pain: "Falta de controle centralizado de retornos de vacinas e exames, gerando perda de receita recorrente.",
-    status: "1º contato",
+    company: "Caninos Pet Shop",
+    segment: "Pet shop, banho, tosa e hotel",
+    size: "26 anos, agendamento por WhatsApp",
+    whatsapp: "(15) 98800-0892",
+    site: "https://petshopcaninos.com.br/",
+    contactHint: "WhatsApp direto para agendamento; abordar como melhoria de rotina, nao como sistema grande.",
+    ease: "Muito facil - servico recorrente, agenda e taxi dog.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Banho, tosa, hotel, creche e taxi dog exigem agenda organizada, lembretes e retorno recorrente dos tutores.",
+    status: "1o contato",
     temperature: "Quente",
     channel: "WhatsApp",
-    nextAction: "Enviar modelo de controle de retornos de pacientes",
-    message: "Olá! Notamos que vocês possuem grande fluxo de atendimento. Nós da Sykron desenvolvemos soluções sob medida para automatizar lembretes e controle de pacientes. Podemos enviar um exemplo prático?",
+    nextAction: "Oferecer planilha/mini CRM de agenda e retorno",
+    message: "Oi, tudo bem? Vi que a Caninos tem banho e tosa, creche, hotel e taxi dog. Esse tipo de rotina costuma depender muito de agenda e lembrete no WhatsApp. A Sykron pode montar um controle simples para retornos, pacotes e lembretes de clientes. Posso te mostrar um modelo bem rapido?",
   },
   {
-    company: "Distribuidora de Autopeças Via Sul",
-    segment: "Comércio Atacadista",
-    size: "30 colaboradores",
-    whatsapp: "(15) 3335-1200",
-    site: "https://viasul-autopecas.com.br",
-    contactHint: "Contato direto com o supervisor comercial.",
-    ease: "Alto - Demanda imediata por controle de estoque e pedidos.",
-    source: "Indicação regional",
-    pain: "Processo de pedidos fragmentado entre WhatsApp dos vendedores e estoque.",
-    status: "Diagnóstico",
+    company: "Fino Faro Pet Shop",
+    segment: "Pet shop, banho, tosa e delivery",
+    size: "Loja local com delivery e WhatsApp",
+    whatsapp: "(15) 99611-1325",
+    site: "https://finofarosorocaba.com.br/",
+    contactHint: "Contato direto no WhatsApp/celular; oferta inicial deve ser pequena e pratica.",
+    ease: "Muito facil - delivery + banho e tosa geram controle manual.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Pedidos por delivery, agendamentos de banho e tosa e recompra de produtos podem virar lista manual sem acompanhamento.",
+    status: "1o contato",
     temperature: "Quente",
-    channel: "Ligação",
-    nextAction: "Agendar reunião de demonstração do sistema comercial Sykron",
-    message: "Olá! A Sykron ajuda distribuidores em Sorocaba a centralizar pedidos e estoque em um painel simples e rápido. Podemos demonstrar como funciona?",
-  }
+    channel: "WhatsApp",
+    nextAction: "Oferecer controle de delivery, agendamentos e recompra",
+    message: "Oi, tudo bem? Vi que voces trabalham com pet shop, banho e tosa e delivery. A Sykron ajuda negocios locais a organizar pedidos, agendamentos e retornos de clientes em um controle simples. Posso te mandar uma sugestao bem pratica para facilitar a rotina do WhatsApp?",
+  },
+  {
+    company: "Belle Petit Pet Salon",
+    segment: "Banho e tosa premium",
+    size: "Salao pet local com agendamento por WhatsApp",
+    whatsapp: "(15) 99818-9097",
+    site: "https://bellepetit.com.br/",
+    contactHint: "Chamar oferecendo organizacao de agenda e pacotes recorrentes.",
+    ease: "Muito facil - decisao provavelmente com dono/gestor local.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Atendimento por horario, pacotes recorrentes e orcamentos personalizados podem precisar de lembretes e controle de clientes.",
+    status: "1o contato",
+    temperature: "Quente",
+    channel: "WhatsApp",
+    nextAction: "Enviar ideia de agenda + lembrete automatico",
+    message: "Oi, tudo bem? Vi que o agendamento da Belle Petit e feito pelo WhatsApp e que voces trabalham com atendimento premium. A Sykron pode ajudar com um controle simples de agenda, retorno e pacotes recorrentes, sem sistema complicado. Posso te mostrar uma ideia?",
+  },
+  {
+    company: "CampoClin",
+    segment: "Clinica de especialidades",
+    size: "8 especialidades e mais de 1 mil consultas por ano",
+    whatsapp: "(15) 99618-1557",
+    site: "https://campoclin.com.br/",
+    contactHint: "WhatsApp responde pacientes; propor melhoria de agenda e conversao.",
+    ease: "Facil - dor clara, mas clinica pode ter decisao um pouco mais formal.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Consultas com hora marcada, retorno por WhatsApp, locacao de salas e profissionais diferentes exigem organizacao de agenda e indicadores.",
+    status: "1o contato",
+    temperature: "Morno",
+    channel: "WhatsApp",
+    nextAction: "Oferecer diagnostico de agenda, salas e conversao",
+    message: "Oi, tudo bem? Vi que a CampoClin trabalha com varias especialidades, agenda por WhatsApp e locacao de salas. A Sykron pode ajudar a organizar agenda, retornos e indicadores simples de atendimento. Posso te mandar uma sugestao de melhoria sem compromisso?",
+  },
+  {
+    company: "Vet Center Sorocaba",
+    segment: "Clinica veterinaria 24h",
+    size: "Atendimento 24h com banho, tosa, exames e farmacia",
+    whatsapp: "(15) 3233-1083",
+    site: "https://www.vetcentersorocaba.com.br/",
+    contactHint: "WhatsApp publico; abordagem deve focar em lembretes, retornos e organizacao.",
+    ease: "Facil - muitos servicos recorrentes e urgencias.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Consultas, banho e tosa, farmacia, exames e retornos criam varios pontos de contato que podem ser organizados em um fluxo simples.",
+    status: "1o contato",
+    temperature: "Morno",
+    channel: "WhatsApp",
+    nextAction: "Propor controle de retornos, vacinas e servicos recorrentes",
+    message: "Oi, tudo bem? Vi que a Vet Center tem atendimento 24h e varios servicos para pets. A Sykron pode ajudar com um controle simples de retornos, lembretes e acompanhamento de clientes pelo WhatsApp. Posso te mandar uma ideia pratica?",
+  },
+  {
+    company: "Vetlab Sorocaba",
+    segment: "Laboratorio veterinario",
+    size: "Mais de 20 anos, exames e resultados digitais",
+    whatsapp: "(15) 99727-2218",
+    site: "https://vetlabsorocaba.com.br/",
+    contactHint: "Chamar com proposta de organizar pedidos, retornos de exame e parceiros.",
+    ease: "Facil - rotina de exames tem status, prazos e resultado.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Agendamentos de exames, resultados por WhatsApp/e-mail e parcerias com veterinarios podem ganhar controle de status e prazos.",
+    status: "1o contato",
+    temperature: "Morno",
+    channel: "WhatsApp",
+    nextAction: "Oferecer quadro simples de status dos exames e retornos",
+    message: "Oi, tudo bem? Vi que a Vetlab agenda exames e entrega resultados digitais. A Sykron pode ajudar com um controle simples de status, prazos e retornos para melhorar a visibilidade da rotina. Posso te mostrar uma sugestao rapida?",
+  },
+  {
+    company: "L.A English Idiomas & Musica",
+    segment: "Escola de idiomas e musica",
+    size: "Escola local com aula demonstrativa",
+    whatsapp: "(15) 99117-5760",
+    site: "https://www.laenglish.com.br/",
+    contactHint: "Chamar sobre controle de leads de aula demonstrativa e rematricula.",
+    ease: "Facil - venda recorrente, leads de aulas e follow-up.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Aulas demonstrativas, novos alunos, rematriculas e acompanhamento de interessados precisam de funil simples para nao perder contatos.",
+    status: "1o contato",
+    temperature: "Super quente",
+    channel: "WhatsApp",
+    nextAction: "Oferecer funil simples para interessados e rematriculas",
+    message: "Oi, tudo bem? Vi que voces trabalham com aulas demonstrativas e varios cursos. A Sykron pode montar um controle simples para interessados, follow-ups e rematriculas, ajudando a nao perder contatos do WhatsApp. Posso te mandar um exemplo?",
+  },
+  {
+    company: "FACOP Sorocaba",
+    segment: "Clinica odontologica e cursos",
+    size: "Recepcao e comercial com WhatsApp publico",
+    whatsapp: "(15) 99164-0202",
+    site: "https://facopsorocaba.com.br/agendamento/",
+    contactHint: "Comecar pela recepcao; pedir responsavel por agenda/comercial.",
+    ease: "Media facil - tem varios WhatsApps e rotina clara de triagem.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Triagem de pacientes, agenda de avaliacao, cursos e contatos comerciais podem precisar de follow-up organizado.",
+    status: "Pesquisa",
+    temperature: "Frio",
+    channel: "WhatsApp",
+    nextAction: "Validar responsavel por agenda e comercial",
+    message: "Oi, tudo bem? Vi que a FACOP tem triagem, agendamento e canais comerciais por WhatsApp. A Sykron pode ajudar a organizar os contatos, retornos e indicadores de atendimento em um controle simples. Quem seria a pessoa ideal para eu apresentar essa ideia?",
+  },
+  {
+    company: "RPM Entregas Rapidas",
+    segment: "Entregas rapidas e armazenagem",
+    size: "Base em Sorocaba, frota propria e galpao",
+    whatsapp: "(15) 98102-6224",
+    site: "https://rpmentregas.com.br/",
+    contactHint: "WhatsApp publico; propor controle simples de pedidos e ocorrencias.",
+    ease: "Media facil - B2B local com dor operacional objetiva.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Entregas, rastreio, armazenamento e solicitacoes por WhatsApp podem precisar de status, prazos e controle de clientes.",
+    status: "Pesquisa",
+    temperature: "Frio",
+    channel: "WhatsApp",
+    nextAction: "Oferecer controle de pedidos, status e follow-up B2B",
+    message: "Oi, tudo bem? Vi que a RPM trabalha com entregas, rastreio e armazenagem. A Sykron pode ajudar com um controle simples de pedidos, status e retornos para clientes, sem implantar um sistema pesado. Posso te mandar uma ideia pratica?",
+  },
+  {
+    company: "Sorridents Sorocaba",
+    segment: "Clinica odontologica",
+    size: "Clinica com avaliacao gratuita e WhatsApp",
+    whatsapp: "(15) 99744-1135",
+    site: "https://www.implantesdentariossorocaba.com.br/",
+    contactHint: "Chamar pelo WhatsApp oferecendo melhoria de conversao de avaliacao gratuita.",
+    ease: "Media facil - boa dor comercial, mas pode ter padrao de franquia.",
+    source: "Site oficial - WhatsApp publico",
+    pain: "Avaliacoes gratuitas, agendamento imediato e retorno de interessados pedem funil de atendimento para melhorar conversao.",
+    status: "Nutrir",
+    temperature: "Bolsao",
+    channel: "WhatsApp",
+    nextAction: "Enviar abordagem sobre conversao de avaliacoes",
+    message: "Oi, tudo bem? Vi que voces trabalham com avaliacao gratuita e agendamento pelo WhatsApp. A Sykron pode ajudar a organizar interessados, retornos e indicadores de conversao em um controle simples. Posso te mandar uma sugestao?",
+  },
 ];
 
 const brl = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(n);
@@ -564,28 +697,6 @@ export default function Home() {
     });
   }
 
-  function deleteDeal(deal: Deal) {
-    if (!confirm(`Excluir "${deal.company}" do funil de vendas? Essa acao nao pode ser desfeita.`)) return;
-    setDeals((prev) => prev.filter((item) => item.id !== deal.id));
-    if (supabase && session?.user.id) {
-      deleteCloudDeal(supabase, session.user.id, Number(deal.id)).catch((error) => {
-        setToast(`Nao foi possivel excluir: ${error.message || "verifique o banco online"}`);
-        setTimeout(() => setToast(""), 4200);
-      });
-    }
-  }
-
-  function deleteProspect(prospect: Prospect) {
-    if (!confirm(`Excluir "${prospect.company}" da lista de prospeccao? Essa acao nao pode ser desfeita.`)) return;
-    setProspectList((prev) => prev.filter((item) => item.company !== prospect.company));
-    if (supabase && session?.user.id) {
-      deleteCloudProspect(supabase, session.user.id, prospect.company).catch((error) => {
-        setToast(`Nao foi possivel excluir: ${error.message || "verifique o banco online"}`);
-        setTimeout(() => setToast(""), 4200);
-      });
-    }
-  }
-
   function addDeal(e: React.FormEvent) {
     e.preventDefault();
     if (!form.company || !form.title) return;
@@ -850,20 +961,7 @@ export default function Home() {
             <p>{brl(total)} de R$ 100 mil em oportunidades neste mes.</p>
             <button onClick={() => setActive("Funil de vendas")}>Ver planejamento</button>
           </div>
-          <button className="settings" onClick={() => {
-            if (confirm("Deseja realmente limpar todos os leads e negócios de teste do CRM?")) {
-              setDeals([]);
-              setProspectList([]);
-              setContactList([]);
-              setCompanyList([]);
-              localStorage.removeItem("sykron_deals");
-              localStorage.removeItem("sykron_prospects");
-              localStorage.removeItem("sykron_contacts");
-              localStorage.removeItem("sykron_companies");
-              alert("CRM limpo com sucesso!");
-              window.location.reload();
-            }
-          }}><Settings size={18} /> Limpar CRM</button>
+          <button className="settings"><Settings size={18} /> Configuracoes</button>
           <div className="profile"><div className="profile-avatar">JO</div><div><b>Jefferson Oliveira</b><small>{session?.user.email || "Administrador"}</small></div>{supabase && session ? <button className="logout-button" onClick={() => supabase.auth.signOut()}>Sair</button> : <MoreHorizontal size={18} />}</div>
         </div>
       </aside>
@@ -892,11 +990,11 @@ export default function Home() {
           )}
 
           {active === "Prospeccao" && (
-            <ProspectionModule prospects={filteredProspects} onOpen={(prospect) => openRecord("prospect", prospect)} onEdit={(prospect) => openRecord("prospect", prospect, "edit")} onAddInteraction={(prospect) => openRecord("prospect", prospect, "edit")} onNew={() => newRecord("prospect")} onDelete={deleteProspect} />
+            <ProspectionModule prospects={filteredProspects} onOpen={(prospect) => openRecord("prospect", prospect)} onEdit={(prospect) => openRecord("prospect", prospect, "edit")} onAddInteraction={(prospect) => openRecord("prospect", prospect, "edit")} onNew={() => newRecord("prospect")} />
           )}
 
           {active === "Funil de vendas" && (
-            <PipelineModule deals={filteredDeals} setForm={setForm} setModal={setModal} onOpen={(deal) => openRecord("deal", deal)} onEdit={(deal) => openRecord("deal", deal, "edit")} onAddInteraction={(deal) => openRecord("deal", deal, "edit")} onDelete={deleteDeal} />
+            <PipelineModule deals={filteredDeals} setForm={setForm} setModal={setModal} onOpen={(deal) => openRecord("deal", deal)} onEdit={(deal) => openRecord("deal", deal, "edit")} onAddInteraction={(deal) => openRecord("deal", deal, "edit")} />
           )}
 
           {active === "Contatos" && (
@@ -999,7 +1097,7 @@ function Overview({ deals, total, prospectCount, contactCount, companyCount, sol
   );
 }
 
-function ProspectionModule({ prospects, onOpen, onEdit, onAddInteraction, onNew, onDelete }: { prospects: Prospect[]; onOpen: (prospect: Prospect) => void; onEdit: (prospect: Prospect) => void; onAddInteraction: (prospect: Prospect) => void; onNew: () => void; onDelete: (prospect: Prospect) => void }) {
+function ProspectionModule({ prospects, onOpen, onEdit, onAddInteraction, onNew }: { prospects: Prospect[]; onOpen: (prospect: Prospect) => void; onEdit: (prospect: Prospect) => void; onAddInteraction: (prospect: Prospect) => void; onNew: () => void }) {
   const hotLeads = prospects.filter((prospect) => prospect.temperature === "Super quente" || prospect.temperature === "Quente").length;
 
   return (
@@ -1030,7 +1128,7 @@ function ProspectionModule({ prospects, onOpen, onEdit, onAddInteraction, onNew,
                 <div className="pain-box"><small>Dor provavel</small><b>{prospect.pain}</b></div>
                 <div className="prospect-followup"><span><small>Ultima interacao</small>{prospect.lastInteraction || "Pesquisa inicial"}</span><span><small>Proximo retorno</small>{prospect.nextReturn || `Em ${returnPeriodByTemperature[prospect.temperature] || "7 dias"}`}</span><strong>{prospect.potential ? brl(prospect.potential) : brl(prospect.temperature === "Super quente" ? 2800 : prospect.temperature === "Quente" ? 2200 : 1800)}</strong></div>
                 <footer><span>{prospect.source}</span><strong>{prospect.nextAction}</strong></footer>
-                <div className="record-actions"><button onClick={() => onOpen(prospect)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(prospect)}>Registrar interacao</button><button onClick={() => onEdit(prospect)}>Editar</button><button className="delete-action" onClick={() => onDelete(prospect)}>Excluir</button></div>
+                <div className="record-actions"><button onClick={() => onOpen(prospect)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(prospect)}>Registrar interacao</button><button onClick={() => onEdit(prospect)}>Editar</button></div>
               </article>
             ))}
           </div>
@@ -1054,7 +1152,7 @@ function ProspectionModule({ prospects, onOpen, onEdit, onAddInteraction, onNew,
   );
 }
 
-function PipelineModule({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction, onDelete }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void; onDelete: (deal: Deal) => void }) {
+function PipelineModule({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void }) {
   const hotDeals = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
   const activeFollowUps = deals.filter((deal) => deal.temperature === "Super quente" || deal.temperature === "Quente").length;
 
@@ -1074,12 +1172,12 @@ function PipelineModule({ deals, setForm, setModal, onOpen, onEdit, onAddInterac
           );
         })}
       </div>
-      <Kanban deals={deals} setForm={setForm} setModal={setModal} onOpen={onOpen} onEdit={onEdit} onAddInteraction={onAddInteraction} onDelete={onDelete} />
+      <Kanban deals={deals} setForm={setForm} setModal={setModal} onOpen={onOpen} onEdit={onEdit} onAddInteraction={onAddInteraction} />
     </section>
   );
 }
 
-function Kanban({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction, onDelete }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void; onDelete: (deal: Deal) => void }) {
+function Kanban({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction }: { deals: Deal[]; setForm: React.Dispatch<React.SetStateAction<{ company: string; title: string; value: string; stage: string }>>; setModal: (open: boolean) => void; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void }) {
   return (
     <div className="kanban">
       {stages.map((stage, index) => {
@@ -1088,7 +1186,7 @@ function Kanban({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction, on
           <div className="column" key={stage}>
             <div className="column-head"><span className={`stage-dot s${index}`} /><b>{stage}</b><em>{stageDeals.length}</em><small>{brl(stageDeals.reduce((sum, deal) => sum + deal.value, 0))}</small></div>
             <div className="cards">
-              {stageDeals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} onEdit={onEdit} onAddInteraction={onAddInteraction} onDelete={onDelete} />)}
+              {stageDeals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} onEdit={onEdit} onAddInteraction={onAddInteraction} />)}
               <button className="add-card" onClick={() => { setForm((form) => ({ ...form, stage })); setModal(true); }}><Plus size={15} /> Adicionar oportunidade</button>
             </div>
           </div>
@@ -1098,7 +1196,7 @@ function Kanban({ deals, setForm, setModal, onOpen, onEdit, onAddInteraction, on
   );
 }
 
-function DealCard({ deal, onOpen, onEdit, onAddInteraction, onDelete }: { deal: Deal; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void; onDelete: (deal: Deal) => void }) {
+function DealCard({ deal, onOpen, onEdit, onAddInteraction }: { deal: Deal; onOpen: (deal: Deal) => void; onEdit: (deal: Deal) => void; onAddInteraction: (deal: Deal) => void }) {
   return (
     <article className="deal-card">
       <div className="deal-top"><div className="company-avatar" style={{ background: deal.color }}>{deal.initials}</div><span className="tag">{deal.tag}</span><button aria-label="Mais opcoes"><MoreHorizontal size={17} /></button></div>
@@ -1113,7 +1211,7 @@ function DealCard({ deal, onOpen, onEdit, onAddInteraction, onDelete }: { deal: 
       <div className="card-last-interaction"><small>Ultima interacao</small><span>{latestHistoryStep(deal.historyTimeline)}</span></div>
       <strong>{brl(deal.value)}</strong>
       <div className="deal-footer"><span><Clock3 size={13} /> {deal.due}</span><span className="person">{deal.person.slice(0, 1)}</span></div>
-      <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(deal)}>Adicionar interacao</button><button onClick={() => onEdit(deal)}>Editar</button><button className="delete-action" onClick={() => onDelete(deal)}>Excluir</button></div>
+      <div className="record-actions"><button onClick={() => onOpen(deal)}>Abrir historico</button><button className="interaction-action" onClick={() => onAddInteraction(deal)}>Adicionar interacao</button><button onClick={() => onEdit(deal)}>Editar</button></div>
     </article>
   );
 }
@@ -1334,7 +1432,7 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                   <label>Proximo passo<input placeholder="Ex.: retornar sexta com exemplo visual" value={historyEntry.next} onChange={(event) => setHistoryEntry((current) => ({ ...current, next: event.target.value }))} /></label>
                   <label>Data prevista para retorno<input placeholder="Ex.: 29/07/2026" value={historyEntry.returnDate} onChange={(event) => setHistoryEntry((current) => ({ ...current, returnDate: event.target.value }))} /></label>
                   <label>Nova etapa do funil<select value={historyEntry.status} onChange={(event) => setHistoryEntry((current) => ({ ...current, status: event.target.value }))}><option value="">Manter etapa atual</option>{stages.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
-                  <label>Temperatura<select value={historyEntry.temperature} onChange={(event) => setHistoryEntry((current) => ({ ...current, temperature: event.target.value }))}>{salesTemperatures.map((temperature) => <option key={temperature} value={temperature}>{temperature} ({returnPeriodByTemperature[temperature]})</option>)}</select></label>
+                  <label>Temperatura<select value={historyEntry.temperature} onChange={(event) => setHistoryEntry((current) => ({ ...current, temperature: event.target.value }))}>{salesTemperatures.map((temperature) => <option key={temperature}>{temperature}</option>)}</select></label>
                   <label>Responsavel<input value={historyEntry.owner} onChange={(event) => setHistoryEntry((current) => ({ ...current, owner: event.target.value }))} /></label>
                   <label className="wide-field">Anexo ou link<input placeholder="Cole um link de proposta, reunião ou arquivo" value={historyEntry.link} onChange={(event) => setHistoryEntry((current) => ({ ...current, link: event.target.value }))} /></label>
                 </div>
@@ -1347,11 +1445,7 @@ function RecordEditor({ editor, draft, setDraft, onClose, onEdit, onSubmit }: { 
                   {field.label}
                   {field.type === "select" ? (
                     <select value={draft[field.name] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field.name]: event.target.value }))}>
-                      {field.options?.map((option) => (
-                        <option key={option} value={option}>
-                          {field.name === "temperature" ? `${option} (${returnPeriodByTemperature[option]})` : option}
-                        </option>
-                      ))}
+                      {field.options?.map((option) => <option key={option}>{option}</option>)}
                     </select>
                   ) : field.type === "textarea" ? (
                     <textarea value={draft[field.name] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field.name]: event.target.value }))} />
