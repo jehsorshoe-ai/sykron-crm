@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#0D2940"/><stop offset="1" stop-color="#061321"/></linearGradient></defs>
+  <rect width="1080" height="1350" fill="url(#g)"/>
+  <path d="M0 1080 L1080 620 L1080 1350 L0 1350Z" fill="#00B9F2" opacity=".09"/>
+  <text x="80" y="150" fill="#75DFFF" font-family="Arial" font-size="32" font-weight="700" letter-spacing="4">GESTÃO + TECNOLOGIA</text>
+  <text x="80" y="360" fill="#FFFFFF" font-family="Arial" font-size="76" font-weight="800">Sua empresa não</text>
+  <text x="80" y="450" fill="#FFFFFF" font-family="Arial" font-size="76" font-weight="800">precisa de mais</text>
+  <text x="80" y="540" fill="#FFFFFF" font-family="Arial" font-size="76" font-weight="800">uma ferramenta.</text>
+  <text x="80" y="690" fill="#00B9F2" font-family="Arial" font-size="76" font-weight="800">Precisa de direção.</text>
+  <text x="80" y="850" fill="#A9C0D1" font-family="Arial" font-size="37">Mapeamos, integramos e automatizamos</text>
+  <text x="80" y="902" fill="#A9C0D1" font-family="Arial" font-size="37">para transformar informação em resultado.</text>
+  <g transform="translate(865 1130) rotate(45)"><rect x="-70" y="-70" width="140" height="140" fill="none" stroke="#00B9F2" stroke-width="20"/><rect x="-22" y="-22" width="44" height="44" fill="#00B9F2"/></g>
+  <text x="80" y="1225" fill="#FFFFFF" font-family="Arial" font-size="34" font-weight="800" letter-spacing="6">SYKRON</text>
+</svg>

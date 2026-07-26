@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs><radialGradient id="bg"><stop stop-color="#0D2940"/><stop offset="1" stop-color="#061321"/></radialGradient></defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <g transform="translate(540 500) rotate(45)">
+    <rect x="-155" y="-155" width="310" height="310" rx="28" fill="none" stroke="#00B9F2" stroke-width="42"/>
+    <rect x="-48" y="-48" width="96" height="96" rx="12" fill="#00B9F2"/>
+  </g>
+  <text x="540" y="800" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="15" text-anchor="middle">SYKRON</text>
+</svg>

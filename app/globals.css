@@ -47,6 +47,8 @@ body{font-size:15px}
 .record-actions{flex-wrap:wrap}
 .record-actions button{height:34px;padding:0 11px;font-size:10px;border-radius:9px}
 .record-actions .interaction-action{border-color:#00a8d6;background:linear-gradient(135deg,#00b9f2,#007ea6);color:#fff;box-shadow:0 5px 14px #00a8d62b}
+.record-actions .delete-action{border-color:#e0524a;color:#e0524a;background:#fff}
+.record-actions .delete-action:hover{background:#fdecea}
 .prospect-followup{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f7fbfd;border:1px solid #e0edf4;border-radius:10px;padding:10px}
 .prospect-followup span,.prospect-followup strong{display:block;font-size:10px;line-height:1.35;color:#33495c}
 .prospect-followup small{display:block;color:#007ea6;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}

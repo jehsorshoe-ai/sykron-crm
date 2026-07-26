@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#061321"/>
+  <circle cx="910" cy="160" r="260" fill="#00B9F2" opacity=".10"/>
+  <g transform="translate(135 150) rotate(45)"><rect x="-38" y="-38" width="76" height="76" fill="none" stroke="#00B9F2" stroke-width="12"/><rect x="-12" y="-12" width="24" height="24" fill="#00B9F2"/></g>
+  <text x="205" y="175" fill="#FFFFFF" font-family="Arial" font-weight="800" font-size="38" letter-spacing="8">SYKRON</text>
+  <text x="90" y="505" fill="#75DFFF" font-family="Arial" font-weight="700" font-size="34" letter-spacing="4">INTELIGÊNCIA EMPRESARIAL</text>
+  <text x="90" y="625" fill="#FFFFFF" font-family="Arial" font-weight="800" font-size="92">Dados que viram</text>
+  <text x="90" y="730" fill="#FFFFFF" font-family="Arial" font-weight="800" font-size="92">decisões.</text>
+  <rect x="90" y="810" width="150" height="10" rx="5" fill="#00B9F2"/>
+  <text x="90" y="925" fill="#A9C0D1" font-family="Arial" font-size="38">Processos • Sistemas • Automação • IA</text>
+  <text x="90" y="1225" fill="#5F8198" font-family="Arial" font-size="28">@contato.sykron</text>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#F4F8FB"/>
+  <rect x="0" y="0" width="1080" height="170" fill="#061321"/>
+  <text x="70" y="105" fill="#FFFFFF" font-family="Arial" font-weight="800" font-size="42" letter-spacing="8">SYKRON</text>
+  <text x="70" y="315" fill="#0B2238" font-family="Arial" font-size="34" font-weight="700" letter-spacing="3">O QUE TRANSFORMAMOS</text>
+  <text x="70" y="430" fill="#0B2238" font-family="Arial" font-size="68" font-weight="800">Complexidade em clareza.</text>
+  <g font-family="Arial" font-size="39" font-weight="700" fill="#0B2238">
+    <rect x="70" y="550" width="940" height="130" rx="22" fill="#FFFFFF" stroke="#D7E5EE"/><circle cx="135" cy="615" r="24" fill="#00B9F2"/><text x="190" y="630">Processos mais eficientes</text>
+    <rect x="70" y="715" width="940" height="130" rx="22" fill="#FFFFFF" stroke="#D7E5EE"/><circle cx="135" cy="780" r="24" fill="#00B9F2"/><text x="190" y="795">Sistemas que conversam</text>
+    <rect x="70" y="880" width="940" height="130" rx="22" fill="#FFFFFF" stroke="#D7E5EE"/><circle cx="135" cy="945" r="24" fill="#00B9F2"/><text x="190" y="960">Indicadores para decidir</text>
+  </g>
+  <text x="70" y="1190" fill="#65788A" font-family="Arial" font-size="31">Tecnologia aplicada ao que realmente importa.</text>
+</svg>

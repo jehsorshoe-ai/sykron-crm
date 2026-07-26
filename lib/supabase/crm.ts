@@ -121,6 +121,16 @@ export async function saveCloudProspect(client: SupabaseClient, userId: string, 
   if (error) throw error;
 }
 
+export async function deleteCloudDeal(client: SupabaseClient, userId: string, localId: number) {
+  const { error } = await client.from("crm_deals").delete().eq("owner_id", userId).eq("local_id", localId);
+  if (error) throw error;
+}
+
+export async function deleteCloudProspect(client: SupabaseClient, userId: string, recordKey: string) {
+  const { error } = await client.from("crm_prospects").delete().eq("owner_id", userId).eq("record_key", recordKey);
+  if (error) throw error;
+}
+
 export async function saveCloudInteractions(client: SupabaseClient, userId: string, entityType: CloudInteraction["entity_type"], entityKey: string, interactions: CloudInteraction[]) {
   if (!interactions.length) return;
   const rows = interactions.map((interaction) => ({
